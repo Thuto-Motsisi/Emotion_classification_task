@@ -199,12 +199,13 @@
 # st.write(f"{remaining} more sentences to go")
 
 
-
 import streamlit as st
 import pandas as pd
 import random
 from supabase import create_client
 import time
+import json
+from datetime import datetime
 
 # Initialize Supabase client
 url = st.secrets["SUPABASE_URL"]
@@ -240,7 +241,8 @@ def update_annotation(annotation_id, emotion_label, confidence_score):
     try:
         supabase.table("annotations").update({
             "emotion_label": emotion_label,
-            "confidence_score": confidence_score
+            "confidence_score": confidence_score,
+            "updated_at": datetime.now().isoformat()
         }).eq("id", annotation_id).execute()
         return True
     except Exception as e:
@@ -254,12 +256,50 @@ def save_annotation(annotator_id, sentence_id, emotion_label, confidence_score):
             "annotator_id": annotator_id,
             "sentence_id": int(sentence_id),
             "emotion_label": emotion_label,
-            "confidence_score": confidence_score
+            "confidence_score": confidence_score,
+            "created_at": datetime.now().isoformat()
         }).execute()
         return result.data[0] if result.data else None
     except Exception as e:
         st.error(f"Error saving annotation: {str(e)}")
         return None
+
+# Function to save state to URL query parameters
+def save_state_to_url():
+    """Save current session state to URL query parameters"""
+    try:
+        state = {
+            "annotator_id": st.session_state.get("annotator_id", ""),
+            "current": st.session_state.get("current", 0),
+            "page": st.session_state.get("page", "login"),
+            "num_sentences": st.session_state.get("num_sentences", ""),
+            "labeled_count": st.session_state.get("labeled_count", 0),
+            "skipped_count": st.session_state.get("skipped_count", 0),
+            "consent_given": st.session_state.get("consent_given", False),
+            "completed": st.session_state.get("completed", False),
+        }
+        
+        state_json = json.dumps(state)
+        st.query_params["app_state"] = state_json
+        return True
+    except Exception as e:
+        return False
+
+# Function to load state from URL query parameters
+def load_state_from_url():
+    """Load session state from URL query parameters"""
+    try:
+        if "app_state" in st.query_params:
+            state_json = st.query_params["app_state"]
+            state = json.loads(state_json)
+            
+            # Restore state
+            for key, value in state.items():
+                st.session_state[key] = value
+            return True
+        return False
+    except Exception as e:
+        return False
 
 # Initialize session state variables
 def init_session_state():
@@ -272,16 +312,24 @@ def init_session_state():
         "sentences": None,
         "current": 0,
         "completed": False,
-        "annotated_sentences": set(),  # Track which sentences have been annotated
-        "existing_annotations": {},  # Cache for existing annotations with full data including ID
-        "consent_given": False,  # Track if user has given consent
-        "page": "login"  # Track current page: login, consent, select_sentences, annotate, complete
+        "annotated_sentences": set(),
+        "existing_annotations": {},
+        "consent_given": False,
+        "page": "login",
+        "state_loaded": False
     }
     for key, value in defaults.items():
         if key not in st.session_state:
             st.session_state[key] = value
 
 init_session_state()
+
+# Try to load state from URL on first run
+if not st.session_state.state_loaded:
+    state_loaded = load_state_from_url()
+    if state_loaded and st.session_state.annotator_id:
+        st.success(f"✅ Session restored! Welcome back!")
+    st.session_state.state_loaded = True
 
 # Function to display user ID at top right
 def display_user_id():
@@ -334,6 +382,8 @@ if st.session_state.annotator_id is None:
                     else:
                         st.session_state.annotator_id = user_input
                         st.session_state.page = "consent"
+                        # Save state to URL after login
+                        save_state_to_url()
                         st.rerun()
                 except Exception as e:
                     st.error(f"Login error: {str(e)}")
@@ -348,6 +398,8 @@ if st.session_state.annotator_id is None:
                 st.session_state.is_new_annotator = True
                 st.session_state.page = "consent"
                 st.success(f"✅ Your new USER_ID is: **{new_id}**. Please save this for future use.")
+                # Save state to URL after generating ID
+                save_state_to_url()
                 st.rerun()
             except Exception as e:
                 st.error(f"Error generating ID: {str(e)}")
@@ -430,11 +482,12 @@ if st.session_state.page == "consent":
                 supabase.table("consent_logs").insert({
                     "annotator_id": st.session_state.annotator_id,
                     "consent_given": True,
-                    "timestamp": "now()"
+                    "timestamp": datetime.now().isoformat()
                 }).execute()
             except:
-                # If consent_logs table doesn't exist, just continue
                 pass
+            # Save state to URL
+            save_state_to_url()
             st.rerun()
     
     if not all_checked:
@@ -457,6 +510,8 @@ if st.session_state.page == "select_sentences":
     if st.button("🚀 Start Labeling", use_container_width=True):
         st.session_state.num_sentences = choice
         st.session_state.page = "annotate"
+        # Save state to URL
+        save_state_to_url()
         st.rerun()
     st.stop()
 
@@ -497,7 +552,6 @@ if st.session_state.page == "annotate" and st.session_state.sentences is None:
                 st.stop()
             
             st.session_state.sentences = pd.DataFrame(eligible)
-            st.session_state.current = 0
             st.session_state.completed = False
             
             # Pre-load existing annotations for all sentences
@@ -507,6 +561,9 @@ if st.session_state.page == "annotate" and st.session_state.sentences is None:
                 if existing:
                     st.session_state.existing_annotations[sentence_id] = existing
                     st.session_state.annotated_sentences.add(sentence_id)
+            
+            # Save state to URL after loading sentences
+            save_state_to_url()
             
         except Exception as e:
             st.error(f"Error loading sentences: {str(e)}")
@@ -534,16 +591,13 @@ if st.session_state.page == "annotate":
         st.subheader("📊 Review Your Annotations")
         
         try:
-            # Try ordering by a column that definitely exists
             result = supabase.table("annotations").select("*").eq("annotator_id", st.session_state.annotator_id).execute()
             df_review = pd.DataFrame(result.data)
             
             if not df_review.empty:
-                # Display columns that exist
                 display_cols = [col for col in ["sentence_id", "emotion_label", "confidence_score", "created_at"] if col in df_review.columns]
                 st.dataframe(df_review[display_cols], use_container_width=True)
             
-            # Option to start over or go back
             col1, col2 = st.columns(2)
             with col1:
                 if st.button("🔄 Start Over", use_container_width=True):
@@ -556,16 +610,16 @@ if st.session_state.page == "annotate":
                     st.session_state.annotated_sentences = set()
                     st.session_state.existing_annotations = {}
                     st.session_state.page = "select_sentences"
+                    # Save state to URL
+                    save_state_to_url()
                     st.rerun()
             
             with col2:
                 if st.button("📊 View Statistics", use_container_width=True):
-                    # Show statistics
                     if not df_review.empty:
                         st.subheader("📈 Annotation Statistics")
                         emotion_counts = df_review["emotion_label"].value_counts()
                         st.bar_chart(emotion_counts)
-                        
                         avg_confidence = df_review["confidence_score"].mean()
                         st.metric("Average Confidence", f"{avg_confidence:.2f}")
             
@@ -583,8 +637,7 @@ if st.session_state.page == "annotate":
     # Check if this sentence has an existing annotation
     existing_annotation = st.session_state.existing_annotations.get(sentence_id)
 
-    # ==================== MAIN CONTENT (75% of page) ====================
-    # Display current sentence - larger and more prominent
+    # ==================== MAIN CONTENT ====================
     st.markdown(f"### 📝 Sentence {idx + 1} of {total}")
     if existing_annotation:
         st.info(f"🔄 You already annotated this sentence with **{existing_annotation['emotion_label']}** (confidence: {existing_annotation['confidence_score']:.2f}). You can update it below.")
@@ -609,11 +662,10 @@ if st.session_state.page == "annotate":
         unsafe_allow_html=True
     )
 
-    # Emotion selection - in a more compact layout
+    # Emotion selection
     st.subheader("🏷️ Select Emotion")
     col1, col2 = st.columns(2)
 
-    # Determine default emotion
     default_emotion = existing_annotation.get("emotion_label") if existing_annotation else None
 
     with col1:
@@ -634,7 +686,7 @@ if st.session_state.page == "annotate":
 
     label = left_label or right_label
 
-    # Confidence slider - more compact
+    # Confidence slider
     st.subheader("🎯 Confidence Level")
     default_confidence = existing_annotation.get("confidence_score") if existing_annotation else 0.5
     confidence = st.slider(
@@ -646,18 +698,15 @@ if st.session_state.page == "annotate":
         key=f"conf_{idx}"
     )
 
-    # Display selected emotion - compact
     if label:
         st.success(f"✅ Selected: **{label}** with confidence **{confidence:.2f}**")
 
-    # ==================== COMPACT PROGRESS BAR (25% of page) ====================
+    # ==================== COMPACT PROGRESS BAR ====================
     st.markdown("---")
     
-    # Progress bar
     progress = (idx + 1) / total if total > 0 else 0
     st.progress(progress, text=f"Progress: {int(progress * 100)}%")
     
-    # Compact progress indicators in a single row
     col1, col2, col3, col4 = st.columns(4)
     with col1:
         st.metric("✅ Labeled", st.session_state.labeled_count)
@@ -668,17 +717,17 @@ if st.session_state.page == "annotate":
     with col4:
         st.metric("📊 Total", total)
 
-    # Navigation info - small and subtle
     st.caption(f"📍 Sentence {idx + 1} of {total}")
 
     # ==================== ACTION BUTTONS ====================
-    # Action buttons - Three columns for Previous, Save, Skip
     col_prev, col_next, col_skip = st.columns([2, 4, 2])
 
     with col_prev:
         if st.button("⬅️ Previous", use_container_width=True, disabled=(idx == 0)):
             if idx > 0:
                 st.session_state.current -= 1
+                # Save state to URL
+                save_state_to_url()
                 st.rerun()
 
     with col_next:
@@ -689,50 +738,51 @@ if st.session_state.page == "annotate":
                 st.warning("⚠️ Please set a confidence level greater than 0.")
             else:
                 try:
-                    # Register new annotator if needed
                     if st.session_state.is_new_annotator:
                         supabase.table("annotators").insert({
                             "annotator_id": st.session_state.annotator_id
                         }).execute()
                         st.session_state.is_new_annotator = False
                     
-                    # Check if annotation already exists
                     if existing_annotation and 'id' in existing_annotation:
-                        # Update existing annotation
+                        # UPDATE existing annotation
                         annotation_id = existing_annotation['id']
                         if update_annotation(annotation_id, label, confidence):
-                            # Update session state with new values
+                            # Update session state
                             st.session_state.existing_annotations[sentence_id] = {
                                 **existing_annotation,
                                 "emotion_label": label,
                                 "confidence_score": confidence
                             }
-                            st.success(f"✅ Annotation updated successfully!")
+                            st.success(f"✅ Annotation updated successfully in database!")
                             
-                            # Move to next sentence
                             if idx + 1 < total:
                                 st.session_state.current += 1
+                                # Save state to URL
+                                save_state_to_url()
                                 st.rerun()
                             else:
                                 st.session_state.completed = True
                                 st.session_state.page = "complete"
+                                save_state_to_url()
                                 st.rerun()
                     else:
-                        # Save new annotation
+                        # SAVE new annotation
                         new_annotation = save_annotation(st.session_state.annotator_id, sentence_id, label, confidence)
                         if new_annotation:
-                            # Update session state
                             st.session_state.existing_annotations[sentence_id] = new_annotation
                             st.session_state.annotated_sentences.add(sentence_id)
                             st.session_state.labeled_count += 1
                             
-                            # Move to next sentence
                             if idx + 1 < total:
                                 st.session_state.current += 1
+                                # Save state to URL
+                                save_state_to_url()
                                 st.rerun()
                             else:
                                 st.session_state.completed = True
                                 st.session_state.page = "complete"
+                                save_state_to_url()
                                 st.rerun()
                         
                 except Exception as e:
@@ -740,15 +790,16 @@ if st.session_state.page == "annotate":
 
     with col_skip:
         if st.button("⏭️ Skip", use_container_width=True):
-            # If there's an existing annotation, keep it but move on
             if idx + 1 < total:
                 st.session_state.skipped_count += 1
                 st.session_state.current += 1
+                # Save state to URL
+                save_state_to_url()
                 st.rerun()
             else:
                 st.session_state.completed = True
                 st.session_state.page = "complete"
+                save_state_to_url()
                 st.rerun()
 
-    # Small user ID at bottom
     st.caption(f"👤 Logged in as: **{st.session_state.annotator_id}**")

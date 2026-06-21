@@ -114,11 +114,10 @@ def init_session_state():
         "page": "login",
         "state_loaded": False,
         "skipped_sentences": set(),
-        "show_skip_confirmation": False,
-        "show_save_confirmation": False,
-        "pending_action": None,
-        "temp_label": None,
-        "temp_confidence": None
+        "show_skip_confirm": False,
+        "show_save_confirm": False,
+        "pending_skip": False,
+        "pending_save": False
     }
     for key, value in defaults.items():
         if key not in st.session_state:
@@ -559,7 +558,7 @@ if st.session_state.page == "annotate":
                 st.warning(f"⚠️ You've selected confidence level 0.0 for emotion '{label}'. Are you sure?")
                 col_yes, col_no = st.columns(2)
                 with col_yes:
-                    if st.button("✅ Yes, save with 0.0 confidence", use_container_width=True, key="save_conf_yes"):
+                    if st.button("✅ Yes, save with 0.0 confidence", use_container_width=True):
                         # Proceed with saving
                         try:
                             if st.session_state.is_new_annotator:
@@ -610,7 +609,7 @@ if st.session_state.page == "annotate":
                         except Exception as e:
                             st.error(f"Error saving annotation: {str(e)}")
                 with col_no:
-                    if st.button("❌ No, adjust confidence", use_container_width=True, key="save_conf_no"):
+                    if st.button("❌ No, adjust confidence", use_container_width=True):
                         st.rerun()
             else:
                 # Normal save flow with both label and confidence > 0
@@ -665,25 +664,31 @@ if st.session_state.page == "annotate":
 
     with col_skip:
         if st.button("⏭️ Skip", use_container_width=True):
-            # Show confirmation dialog with label and confidence info
-            if label and confidence > 0:
-                st.warning(f"⚠️ You've selected emotion **'{label}'** with confidence **{confidence:.2f}**. Are you sure you want to skip this sentence and go to the next?")
-            elif label and confidence == 0:
-                st.warning(f"⚠️ You've selected emotion **'{label}'** with confidence **0.0**. Are you sure you want to skip this sentence and go to the next?")
+            # Set pending skip flag
+            st.session_state.pending_skip = True
+        
+        # Handle skip confirmation if pending
+        if st.session_state.pending_skip:
+            if label:
+                st.warning(f"⚠️ You selected **'{label}'** with confidence **{confidence:.2f}**. Are you sure you want to skip?")
             else:
-                st.warning("⚠️ You haven't selected an emotion or confidence level. Are you sure you want to skip this sentence?")
+                st.warning("⚠️ You haven't selected an emotion. Are you sure you want to skip?")
             
             col_yes, col_no = st.columns(2)
             with col_yes:
-                if st.button("✅ Yes, skip", use_container_width=True, key="skip_yes"):
+                if st.button("✅ Yes, Skip", use_container_width=True):
                     # Only increment skip counter if not already annotated or skipped
                     if sentence_id not in st.session_state.annotated_sentences and sentence_id not in st.session_state.skipped_sentences:
                         st.session_state.skipped_count += 1
                         st.session_state.skipped_sentences.add(sentence_id)
+                        st.success(f"⏭️ Sentence skipped!")
                     elif sentence_id in st.session_state.annotated_sentences:
                         st.warning("⚠️ This sentence was already annotated. You can't skip it now.")
-                        st.stop()
+                        st.session_state.pending_skip = False
+                        st.rerun()
                     
+                    # Move to next sentence
+                    st.session_state.pending_skip = False
                     if idx + 1 < total:
                         st.session_state.current += 1
                         save_state_to_url()
@@ -694,7 +699,8 @@ if st.session_state.page == "annotate":
                         save_state_to_url()
                         st.rerun()
             with col_no:
-                if st.button("❌ No, stay", use_container_width=True, key="skip_no"):
+                if st.button("❌ No, Stay", use_container_width=True):
+                    st.session_state.pending_skip = False
                     st.rerun()
 
     st.caption(f"👤 Logged in as: **{st.session_state.annotator_id}**")

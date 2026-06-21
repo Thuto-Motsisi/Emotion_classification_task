@@ -555,17 +555,17 @@ if st.session_state.page == "annotate":
                 st.info("Choose one of the emotion options above.")
             elif confidence == 0.0:
                 # Show warning for confidence = 0
-                st.warning(f"⚠️ You've selected confidence level 0.0 for emotion '{label}'. Are you sure?")
-                col_yes, col_no = st.columns(2)
-                with col_yes:
-                    if st.button("✅ Yes, save with 0.0 confidence", use_container_width=True):
-                        # Proceed with saving
-                        try:
-                            if st.session_state.is_new_annotator:
-                                supabase.table("annotators").insert({
-                                    "annotator_id": st.session_state.annotator_id
-                                }).execute()
-                                st.session_state.is_new_annotator = False
+                st.warning(f"Please select a Confidence level")
+                # col_yes, col_no = st.columns(2)
+                # with col_yes:
+                #     if st.button("✅ Yes, save with 0.0 confidence", use_container_width=True):
+                #         # Proceed with saving
+                #         try:
+                #             if st.session_state.is_new_annotator:
+                #                 supabase.table("annotators").insert({
+                #                     "annotator_id": st.session_state.annotator_id
+                #                 }).execute()
+                #                 st.session_state.is_new_annotator = False
                             
                             if sentence_id in st.session_state.skipped_sentences:
                                 st.session_state.skipped_sentences.remove(sentence_id)

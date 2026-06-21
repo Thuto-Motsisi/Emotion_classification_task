@@ -128,7 +128,7 @@ with col_2:
             text-align:center;
             box-shadow:0 2px 6px rgba(0,0,0,0.1);
         ">
-            👤 {st.session_state.annotator_id}
+             {st.session_state.annotator_id}
         </div>
         """,
         unsafe_allow_html=True,

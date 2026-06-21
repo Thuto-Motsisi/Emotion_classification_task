@@ -1,68 +1,3 @@
-# import streamlit as st
-# import pandas as pd
-# from openpyxl import load_workbook
-
-# df = pd.read_excel("emotional_sentences.xlsx", sheet_name='emotion_sentences')
-# st.title("Emotion Labeling")
-# # st.write(df)
-
-# # Pick 10 unlabelled sentences at the start
-# if "sentences" not in st.session_state:
-#     unlabelled = df[df["Emotion Label"].isna()].head(10)
-#     st.session_state.sentences = unlabelled
-#     st.session_state.current = 0
-
-# sentences = st.session_state.sentences
-# idx = st.session_state.current
-# total = len(sentences)
-# remaining = total - idx - 1
-
-# # Get the current sentence
-# row = sentences.iloc[idx]
-# sentence = row["Sentence"]
-# excel_row = row.name + 2  # +2 because Excel rows start at 1 and row 1 is header
-
-# st.write(sentence)
-
-# col1, col2 = st.columns(2)
-
-# with col1:
-#     left_label = st.radio("What emotion is this?", ["Joy", "Sadness", "Anger", "Fear"], index=None)
-
-# with col2:
-#     right_label = st.radio("", ["Disgust", "Surprise", "Neutral"], index=None)
-
-# label = left_label or right_label
-
-# confidence = st.slider("Confidence level", min_value=0.0, max_value=1.0, step=0.05)
-
-# if label:
-#     st.write(f"You picked **{label}** with confidence **{confidence}**")
-
-
-# if st.button("Save Label"):
-#     wb = load_workbook("emotional_sentences.xlsx")
-#     ws = wb["emotion_sentences"]
-#     ws["C2"] = label
-#     ws["D2"] = confidence
-#     wb.save("emotional_sentences.xlsx")
-#     st.success("Saved!")
-
-# if st.button("Save & Next"):
-#     wb = load_workbook("emotional_sentences.xlsx")
-#     ws = wb["emotion_sentences"]
-#     ws.cell(row=excel_row, column=3, value=label)
-#     ws.cell(row=excel_row, column=4, value=confidence)
-#     wb.save("emotional_sentences.xlsx")
-
-#     if idx + 1 < total:
-#         st.session_state.current += 1
-#         st.rerun()
-#     else:
-#         st.success("All 10 sentences labelled!")
-
-# st.write(f"{remaining} more sentences to go")
-
 import streamlit as st
 import pandas as pd
 import random
@@ -110,7 +45,7 @@ if "annotator_id" not in st.session_state:
             new_id = generate_unique_id(supabase)
             st.session_state.annotator_id = new_id
             st.session_state.is_new_annotator = True
-            st.success(f"Your new USER_ID is : **{new_id}** - Please make sure to save this for future use. ")
+            st.success(f"Your new USER_ID is : **{new_id}**. Please make sure you save this for future use. ")
     st.stop()
 
 #Initializng counter for labeled sentences and skipped sentences.
@@ -120,7 +55,7 @@ if "labeled_count" not in st.session_state:
 if "skipped_count" not in st.session_state:
     st.session_state.skipped_count = 0
 
-#Show User ID 
+#Show User ID at top right corner of every page 
 col_1, col_2 = st.columns([8, 2])
 
 with col_2:
@@ -153,49 +88,26 @@ if "num_sentences" not in st.session_state:
         st.rerun()
     st.stop()
 
-# Load Sentences 
+# Load Sentences from database
 if "sentences" not in st.session_state:
     annotator_id = st.session_state.annotator_id
     limit = st.session_state.num_sentences
 
     # Get all sentences in order
-    all_sentences = (
-        supabase.table("sentences")
-        .select("*")
-        .order("sentence_id")
-        .execute()
-        .data
-    )
-
+    all_sentences = (supabase.table("sentences").select("*").order("sentence_id").execute().data)
     eligible = []
-
     for s in all_sentences:
         sid = s["sentence_id"]
 
         # Count existing annotations for this sentence
-        count = (
-            supabase.table("annotations")
-            .select("sentence_id", count="exact")
-            .eq("sentence_id", sid)
-            .execute()
-            .count
-        )
-
+        count = (supabase.table("annotations").select("sentence_id", count="exact").eq("sentence_id", sid).execute().count)
         if count >= 3:
             continue
 
         # Check if this user already annotated it
-        already = (
-            supabase.table("annotations")
-            .select("sentence_id")
-            .eq("sentence_id", sid)
-            .eq("annotator_id", annotator_id)
-            .execute()
-        )
-
+        already = (supabase.table("annotations").select("sentence_id").eq("sentence_id", sid).eq("annotator_id", annotator_id).execute())
         if not already.data:
             eligible.append(s)
-
         if len(eligible) == limit:
             break
 
@@ -254,7 +166,22 @@ with col_next:
                 st.session_state.current += 1
                 st.rerun()
             else:
-                st.success("All sentences completed!")
+                
+            st.balloons()
+            st.success("✅ You have completed all sentences!")
+
+            st.subheader("Review Your Annotations")
+
+            result = (supabase.table("annotations").select("*").eq("annotator_id", st.session_state.annotator_id).order("created_at", desc=False).execute())
+
+            df_review = pd.DataFrame(result.data)
+        
+            if not df_review.empty:
+                st.dataframe(df_review[["sentence_id", "emotion_label", "confidence_score"]],use_container_width=True)
+        
+            if st.button("🔁 Start Correcting Mistakes"):
+                st.session_state.current = 0
+                st.rerun()    
 
 with col_skip:
     if st.button("Skip"):
@@ -265,30 +192,6 @@ with col_skip:
         else:
             st.success("Thank you for labeling all the sentences!")
 
-
-# if st.button("Save & Next"):
-#     if not label:
-#         st.warning("Please select an emotion before continuing!")
-#     elif confidence == 0.0:
-#         st.warning("Please set a confidence level before continuing!")
-#     else:
-#         if st.session_state.get("is_new_annotator") :
-#             supabase.table("annotators").insert({"annotator_id" : st.session_state.annotator_id}).execute()
-#             st.session_state.is_new_annotator = False
-
-#         sentence_id = int(df.iloc[idx]["sentence_id"])
-#         supabase.table("annotations").insert({
-#             "annotator_id" : st.session_state.annotator_id,
-#             "sentence_id" : sentence_id,
-#             "emotion_label" : label,
-#             "confidence_score" : confidence
-#         }).execute()
-
-#         if idx + 1 < total:
-#             st.session_state.current += 1
-#             st.rerun()
-#         else:
-#             st.success("All Sentences labelled!")
 
 
 labeled = st.session_state.labeled_count

@@ -112,7 +112,14 @@ if "annotator_id" not in st.session_state:
             st.session_state.is_new_annotator = True
             st.success(f"Your new USER_ID is : **{new_id}** - Please make sure to save this for future use. ")
     st.stop()
-    
+
+#Initializng counter for labeled sentences and skipped sentences.
+if "labeled_count" not in st.session_state:
+    st.session_state.labeled_count = 0
+
+if "skipped_count" not in st.session_state:
+    st.session_state.skipped_count = 0
+
 #Show User ID 
 col_1, col_2 = st.columns([8, 2])
 
@@ -242,7 +249,7 @@ with col_next:
                 "emotion_label": label,
                 "confidence_score": confidence
             }).execute()
-
+            st.session_state.labeled_count += 1
             if idx + 1 < total:
                 st.session_state.current += 1
                 st.rerun()
@@ -252,10 +259,11 @@ with col_next:
 with col_skip:
     if st.button("Skip"):
         if idx + 1 < total:
+            st.session_state.skipped_count += 1
             st.session_state.current += 1
             st.rerun()
         else:
-            st.success("All sentences completed!")
+            st.success("Thank you for labeling all the sentences!")
 
 
 # if st.button("Save & Next"):
@@ -282,6 +290,15 @@ with col_skip:
 #         else:
 #             st.success("All Sentences labelled!")
 
+
+labeled = st.session_state.labeled_count
+skipped = st.session_state.skipped_count
+total = st.session_state.num_sentences
+remaining = total - labeled - skipped
+
+
+st.write(f"You have labeled {labeled}/{total} sentence")
+st.write(f"{skipped} skipped sentences")
 st.write(f"{remaining} more sentences to go")
 
 

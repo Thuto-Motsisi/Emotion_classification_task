@@ -112,6 +112,7 @@ if "annotator_id" not in st.session_state:
             st.session_state.is_new_annotator = True
             st.success(f"Your new USER_ID is : **{new_id}** - Please make sure to save this for future use. ")
     st.stop()
+    
 #Show User ID 
 st.markdown(
     f"""

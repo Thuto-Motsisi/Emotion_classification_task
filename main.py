@@ -166,22 +166,21 @@ with col_next:
                 st.session_state.current += 1
                 st.rerun()
             else:
-                
-            st.balloons()
-            st.success("✅ You have completed all sentences!")
-
-            st.subheader("Review Your Annotations")
-
-            result = (supabase.table("annotations").select("*").eq("annotator_id", st.session_state.annotator_id).order("created_at", desc=False).execute())
-
-            df_review = pd.DataFrame(result.data)
-        
-            if not df_review.empty:
-                st.dataframe(df_review[["sentence_id", "emotion_label", "confidence_score"]],use_container_width=True)
-        
-            if st.button("🔁 Start Correcting Mistakes"):
-                st.session_state.current = 0
-                st.rerun()    
+                st.balloons()
+                st.success("✅ You have completed all sentences!")
+    
+                st.subheader("Review Your Annotations")
+    
+                result = (supabase.table("annotations").select("*").eq("annotator_id", st.session_state.annotator_id).order("created_at", desc=False).execute())
+    
+                df_review = pd.DataFrame(result.data)
+            
+                if not df_review.empty:
+                    st.dataframe(df_review[["sentence_id", "emotion_label", "confidence_score"]],use_container_width=True)
+            
+                if st.button("🔁 Start Correcting Mistakes"):
+                    st.session_state.current = 0
+                    st.rerun()    
 
 with col_skip:
     if st.button("Skip"):

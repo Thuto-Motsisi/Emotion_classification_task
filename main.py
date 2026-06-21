@@ -114,29 +114,25 @@ if "annotator_id" not in st.session_state:
     st.stop()
     
 #Show User ID 
-st.markdown(
-    f"""
-    <style>
-    .user-id {{
-        position: fixed;
-        top: 10px;
-        right: 15px;
-        background: #f0f2f6;
-        padding: 6px 12px;
-        border-radius: 8px;
-        font-size: 14px;
-        font-weight: 600;
-        z-index: 9999;
-        box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-    }}
-    </style>
+col_1, col_2 = st.columns([8, 2])
 
-    <div class="user-id">
-        👤 User ID: {st.session_state.annotator_id}
-    </div>
-    """,
-    unsafe_allow_html=True,
-)
+with col_2:
+    st.markdown(
+        f"""
+        <div style="
+            background:#f0f2f6;
+            padding:6px 12px;
+            border-radius:8px;
+            font-size:14px;
+            font-weight:600;
+            text-align:center;
+            box-shadow:0 2px 6px rgba(0,0,0,0.1);
+        ">
+            👤 {st.session_state.annotator_id}
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
 
 # Pick 10 unlabelled sentences at the start
 if "sentences" not in st.session_state:

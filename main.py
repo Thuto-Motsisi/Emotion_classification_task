@@ -133,6 +133,79 @@ with col_2:
         """,
         unsafe_allow_html=True,
     )
+    
+#user selects how many sentences they will annotate    
+if "num_sentences" not in st.session_state:
+    st.title("How many sentences do you want to annotate?")
+    choice = st.selectbox(
+        "Select number of sentences",
+        [15, 25, 50, 75, 100]
+    )
+    if st.button("Start Labeling"):
+        st.session_state.num_sentences = choice
+        st.rerun()
+    st.stop()
+
+# Load Sentences 
+if "sentences" not in st.session_state:
+    annotator_id = st.session_state.annotator_id
+    limit = st.session_state.num_sentences
+
+    # Get all sentences in order
+    all_sentences = (
+        supabase.table("sentences")
+        .select("*")
+        .order("sentence_id")
+        .execute()
+        .data
+    )
+
+    eligible = []
+
+    for s in all_sentences:
+        sid = s["sentence_id"]
+
+        # Count existing annotations for this sentence
+        count = (
+            supabase.table("annotations")
+            .select("sentence_id", count="exact")
+            .eq("sentence_id", sid)
+            .execute()
+            .count
+        )
+
+        if count >= 3:
+            continue
+
+        # Check if this user already annotated it
+        already = (
+            supabase.table("annotations")
+            .select("sentence_id")
+            .eq("sentence_id", sid)
+            .eq("annotator_id", annotator_id)
+            .execute()
+        )
+
+        if not already.data:
+            eligible.append(s)
+
+        if len(eligible) == limit:
+            break
+
+    st.session_state.sentences = pd.DataFrame(eligible)
+    st.session_state.current = 0
+
+
+
+
+
+
+
+
+
+
+
+
 
 # Pick 10 unlabelled sentences at the start
 if "sentences" not in st.session_state:

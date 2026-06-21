@@ -1,203 +1,3 @@
-# import streamlit as st
-# import pandas as pd
-# import random
-# from supabase import create_client
-
-# url = st.secrets["SUPABASE_URL"]
-# key = st.secrets["SUPABASE_KEY"]
-# supabase = create_client(url,key)
-
-# def generate_unique_id(supabase):
-#     animals = ["CAT", "DOG", "OWL", "FOX", "RAM", "HEN", "COW"]
-#     while True:
-#         animal = random.choice(animals)
-#         number = random.randint(1,999)
-#         new_id = f"ANN-{animal}-{number:03d}"
-
-#         found_in_annotators = supabase.table("annotators").select("annotator_id").eq("annotator_id", new_id).execute()
-#         found_in_annotations = supabase.table("annotations").select("annotator_id").eq("annotator_id", new_id).execute()
-
-#         if len(found_in_annotators.data) == 0 and len(found_in_annotations.data)==0:
-#             return new_id
-
-# #Log in Page 
-# if "annotator_id" not in st.session_state:
-#     st.title("Welcome!")
-#     st.write("Please enter your user ID or get a new one")
-#     user_input = st.text_input("Enter your user ID here", placeholder="eg. ANN-RAT-984")
-
-#     col1, col2 = st.columns(2)
-
-#     with col1 :
-#         if st.button("Log In") :
-#             if user_input:
-#                 existing = supabase.table("annotators").select("annotator_id").eq("annotator_id", user_input).execute()
-#                 if len(existing.data) == 0:
-#                     st.warning("ID not found. Please make sure you entered the correct user ID")
-#                 else: 
-#                     st.session_state.annotator_id = user_input
-#                     st.rerun()
-#             else :
-#                 st.warning("Please Enter your user ID first")
-    
-#     with col2 :
-#         if st.button("I dont have a user ID"):
-#             new_id = generate_unique_id(supabase)
-#             st.session_state.annotator_id = new_id
-#             st.session_state.is_new_annotator = True
-#             st.success(f"Your new USER_ID is : **{new_id}**. Please make sure you save this for future use. ")
-#     st.stop()
-
-# #Initializng counter for labeled sentences and skipped sentences.
-# if "labeled_count" not in st.session_state:
-#     st.session_state.labeled_count = 0
-
-# if "skipped_count" not in st.session_state:
-#     st.session_state.skipped_count = 0
-
-# #Show User ID at top right corner of every page 
-# col_1, col_2 = st.columns([8, 2])
-
-# with col_2:
-#     st.markdown(
-#         f"""
-#         <div style="
-#             background:#f0f2f6;
-#             padding:6px 12px;
-#             border-radius:8px;
-#             font-size:14px;
-#             font-weight:600;
-#             text-align:center;
-#             box-shadow:0 2px 6px rgba(0,0,0,0.1);
-#         ">
-#              {st.session_state.annotator_id}
-#         </div>
-#         """,
-#         unsafe_allow_html=True,
-#     )
-    
-# #user selects how many sentences they will annotate    
-# if "num_sentences" not in st.session_state:
-#     st.title("How many sentences do you want to annotate?")
-#     choice = st.selectbox(
-#         "Select number of sentences",
-#         [15, 25, 50, 75, 100]
-#     )
-#     if st.button("Start Labeling"):
-#         st.session_state.num_sentences = choice
-#         st.rerun()
-#     st.stop()
-
-# # Load Sentences from database
-# if "sentences" not in st.session_state:
-#     annotator_id = st.session_state.annotator_id
-#     limit = st.session_state.num_sentences
-
-#     # Get all sentences in order
-#     all_sentences = (supabase.table("sentences").select("*").order("sentence_id").execute().data)
-#     eligible = []
-#     for s in all_sentences:
-#         sid = s["sentence_id"]
-
-#         # Count existing annotations for this sentence
-#         count = (supabase.table("annotations").select("sentence_id", count="exact").eq("sentence_id", sid).execute().count)
-#         if count >= 3:
-#             continue
-
-#         # Check if this user already annotated it
-#         already = (supabase.table("annotations").select("sentence_id").eq("sentence_id", sid).eq("annotator_id", annotator_id).execute())
-#         if not already.data:
-#             eligible.append(s)
-#         if len(eligible) == limit:
-#             break
-
-#     st.session_state.sentences = pd.DataFrame(eligible)
-#     st.session_state.current = 0
-
-
-# df = st.session_state.sentences
-# idx = st.session_state.current
-# total = len(df)
-# remaining = total - idx - 1
-# sentence = df.iloc[idx]["sentence"]
-
-# st.write(sentence)
-
-# col1, col2 = st.columns(2)
-
-# with col1:
-#     left_label = st.radio("What emotion is this?", ["Joy", "Sadness", "Anger", "Fear"], index=None, key = f"left_{idx}")
-
-# with col2:
-#     right_label = st.radio("", ["Disgust", "Surprise", "Neutral"], index=None, key = f"right_{idx}")
-
-# label = left_label or right_label
-
-# confidence = st.slider("Confidence level", min_value=0.0, max_value=1.0, step=0.05, key = f"conf_{idx}")
-
-# if label:
-#     st.write(f"You picked **{label}** with confidence **{confidence}**")
-
-
-
-# col_next, col_skip = st.columns([4, 1])
-
-# with col_next:
-#     if st.button("Save & Next"):
-#         if not label:
-#             st.warning("Please select an emotion.")
-#         elif confidence == 0.0:
-#             st.warning("Please set a confidence level.")
-#         else:
-#             if st.session_state.get("is_new_annotator"):
-#                 supabase.table("annotators").insert({
-#                     "annotator_id": st.session_state.annotator_id
-#                 }).execute()
-#                 st.session_state.is_new_annotator = False
-
-#             supabase.table("annotations").insert({
-#                 "annotator_id": st.session_state.annotator_id,
-#                 "sentence_id": int(df.iloc[idx]["sentence_id"]),
-#                 "emotion_label": label,
-#                 "confidence_score": confidence
-#             }).execute()
-#             st.session_state.labeled_count += 1
-#             if idx + 1 < total:
-#                 st.session_state.current += 1
-#                 st.rerun()
-#             else:
-#                 st.balloons()
-#                 st.success("✅ You have completed all sentences!")
-#                 st.subheader("Review Your Annotations")
-#                 result = (supabase.table("annotations").select("*").eq("annotator_id", st.session_state.annotator_id).order("created_at", desc=False).execute())
-#                 df_review = pd.DataFrame(result.data)
-#                 if not df_review.empty:
-#                     st.dataframe(df_review[["sentence_id", "emotion_label", "confidence_score"]],use_container_width=True)
-#                 if st.button("🔁 Start Correcting Mistakes"):
-#                     st.session_state.current = 0
-#                     st.rerun()    
-
-# with col_skip:
-#     if st.button("Skip"):
-#         if idx + 1 < total:
-#             st.session_state.skipped_count += 1
-#             st.session_state.current += 1
-#             st.rerun()
-#         else:
-#             st.success("Thank you for labeling all the sentences!")
-
-
-
-# labeled = st.session_state.labeled_count
-# skipped = st.session_state.skipped_count
-# total = st.session_state.num_sentences
-# remaining = total - labeled - skipped
-
-
-# st.write(f"You have labeled {labeled}/{total} sentence")
-# st.write(f"{skipped} skipped sentences")
-# st.write(f"{remaining} more sentences to go")
-
 import streamlit as st
 import pandas as pd
 import random
@@ -313,7 +113,10 @@ def init_session_state():
         "consent_given": False,
         "page": "login",
         "state_loaded": False,
-        "skipped_sentences": set()  # Track which sentences have been skipped
+        "skipped_sentences": set(),
+        "show_skip_confirmation": False,
+        "show_save_confirmation": False,
+        "pending_action": None
     }
     for key, value in defaults.items():
         if key not in st.session_state:
@@ -538,8 +341,10 @@ if st.session_state.page == "annotate" and st.session_state.sentences is None:
             st.session_state.sentences = pd.DataFrame(eligible)
             st.session_state.completed = False
             
-            # Reset skipped sentences tracking for new session
+            # Reset tracking sets
             st.session_state.skipped_sentences = set()
+            st.session_state.annotated_sentences = set()
+            st.session_state.existing_annotations = {}
             
             # Pre-load existing annotations for all sentences
             for idx, row in enumerate(st.session_state.sentences.iterrows()):
@@ -548,6 +353,7 @@ if st.session_state.page == "annotate" and st.session_state.sentences is None:
                 if existing:
                     st.session_state.existing_annotations[sentence_id] = existing
                     st.session_state.annotated_sentences.add(sentence_id)
+                    st.session_state.labeled_count += 1
             
             save_state_to_url()
             
@@ -565,49 +371,64 @@ if st.session_state.page == "annotate":
         st.warning("No sentences to annotate.")
         st.stop()
 
-    # Check if all sentences are completed
-    if idx >= total:
+    # Check if all sentences are completed (annotated or skipped)
+    all_processed = all(
+        df.iloc[i]["sentence_id"] in st.session_state.annotated_sentences or 
+        df.iloc[i]["sentence_id"] in st.session_state.skipped_sentences 
+        for i in range(total)
+    )
+    
+    if all_processed and idx >= total:
         st.session_state.completed = True
         st.session_state.page = "complete"
 
     if st.session_state.page == "complete":
         st.balloons()
-        st.success("🎉 You have completed all sentences!")
+        st.title("🎉 Thank You for Your Participation!")
         
-        st.subheader("📊 Review Your Annotations")
+        st.markdown("""
+        ### 🙏 We Appreciate Your Contribution!
+        
+        Your annotations will help advance emotion recognition research. 
+        Your time and effort are greatly valued.
+        """)
+        
+        st.subheader("📊 Your Annotation Summary")
         
         try:
             result = supabase.table("annotations").select("*").eq("annotator_id", st.session_state.annotator_id).execute()
             df_review = pd.DataFrame(result.data)
             
             if not df_review.empty:
-                display_cols = [col for col in ["sentence_id", "emotion_label", "confidence_score"] if col in df_review.columns]
-                st.dataframe(df_review[display_cols], use_container_width=True)
+                col1, col2, col3 = st.columns(3)
+                with col1:
+                    st.metric("Total Annotations", len(df_review))
+                with col2:
+                    st.metric("Skipped", st.session_state.skipped_count)
+                with col3:
+                    avg_conf = df_review["confidence_score"].mean()
+                    st.metric("Avg Confidence", f"{avg_conf:.2f}")
+                
+                st.subheader("📈 Emotion Distribution")
+                emotion_counts = df_review["emotion_label"].value_counts()
+                st.bar_chart(emotion_counts)
             
-            col1, col2 = st.columns(2)
-            with col1:
-                if st.button("🔄 Start Over", use_container_width=True):
-                    st.session_state.sentences = None
-                    st.session_state.num_sentences = None
-                    st.session_state.labeled_count = 0
-                    st.session_state.skipped_count = 0
-                    st.session_state.current = 0
-                    st.session_state.completed = False
-                    st.session_state.annotated_sentences = set()
-                    st.session_state.existing_annotations = {}
-                    st.session_state.skipped_sentences = set()
-                    st.session_state.page = "select_sentences"
-                    save_state_to_url()
-                    st.rerun()
+            st.info("💡 You can close this tab or start a new session if you'd like to continue annotating.")
             
-            with col2:
-                if st.button("📊 View Statistics", use_container_width=True):
-                    if not df_review.empty:
-                        st.subheader("📈 Annotation Statistics")
-                        emotion_counts = df_review["emotion_label"].value_counts()
-                        st.bar_chart(emotion_counts)
-                        avg_confidence = df_review["confidence_score"].mean()
-                        st.metric("Average Confidence", f"{avg_confidence:.2f}")
+            # Option to start over
+            if st.button("🔄 Start New Annotation Session", use_container_width=True):
+                st.session_state.sentences = None
+                st.session_state.num_sentences = None
+                st.session_state.labeled_count = 0
+                st.session_state.skipped_count = 0
+                st.session_state.current = 0
+                st.session_state.completed = False
+                st.session_state.annotated_sentences = set()
+                st.session_state.existing_annotations = {}
+                st.session_state.skipped_sentences = set()
+                st.session_state.page = "select_sentences"
+                save_state_to_url()
+                st.rerun()
             
         except Exception as e:
             st.error(f"Error retrieving annotations: {str(e)}")
@@ -623,6 +444,7 @@ if st.session_state.page == "annotate":
     # Check if this sentence has an existing annotation
     existing_annotation = st.session_state.existing_annotations.get(sentence_id)
     is_skipped = sentence_id in st.session_state.skipped_sentences
+    is_annotated = sentence_id in st.session_state.annotated_sentences
 
     # ==================== MAIN CONTENT ====================
     st.markdown(f"### 📝 Sentence {idx + 1} of {total}")
@@ -675,9 +497,9 @@ if st.session_state.page == "annotate":
 
     label = left_label or right_label
 
-    # Confidence slider
+    # Confidence slider - starts at 0.0
     st.subheader("🎯 Confidence Level")
-    default_confidence = existing_annotation.get("confidence_score") if existing_annotation else 0.5
+    default_confidence = existing_annotation.get("confidence_score") if existing_annotation else 0.0
     confidence = st.slider(
         "",
         min_value=0.0,
@@ -693,7 +515,12 @@ if st.session_state.page == "annotate":
     # ==================== COMPACT PROGRESS BAR ====================
     st.markdown("---")
     
-    progress = (idx + 1) / total if total > 0 else 0
+    # Calculate remaining correctly - only count unprocessed sentences
+    remaining = sum(1 for i in range(total) 
+                   if df.iloc[i]["sentence_id"] not in st.session_state.annotated_sentences 
+                   and df.iloc[i]["sentence_id"] not in st.session_state.skipped_sentences)
+    
+    progress = (total - remaining) / total if total > 0 else 0
     st.progress(progress, text=f"Progress: {int(progress * 100)}%")
     
     col1, col2, col3, col4 = st.columns(4)
@@ -702,7 +529,7 @@ if st.session_state.page == "annotate":
     with col2:
         st.metric("⏭️ Skipped", st.session_state.skipped_count)
     with col3:
-        st.metric("📝 Remaining", total - idx - 1)
+        st.metric("📝 Remaining", remaining)
     with col4:
         st.metric("📊 Total", total)
 
@@ -719,12 +546,71 @@ if st.session_state.page == "annotate":
                 st.rerun()
 
     with col_next:
-        if st.button("✅ Save & Next", use_container_width=True, type="primary"):
+        if st.button("💾 Save & Next", use_container_width=True, type="primary"):
             if not label:
                 st.warning("⚠️ Please select an emotion.")
             elif confidence == 0.0:
-                st.warning("⚠️ Please set a confidence level greater than 0.")
+                # Show confirmation for confidence = 0
+                st.warning("⚠️ You've selected confidence level 0.0. Are you sure?")
+                col_yes, col_no = st.columns(2)
+                with col_yes:
+                    if st.button("✅ Yes, proceed", use_container_width=True):
+                        # Proceed with saving
+                        process_save = True
+                        if process_save:
+                            try:
+                                if st.session_state.is_new_annotator:
+                                    supabase.table("annotators").insert({
+                                        "annotator_id": st.session_state.annotator_id
+                                    }).execute()
+                                    st.session_state.is_new_annotator = False
+                                
+                                if sentence_id in st.session_state.skipped_sentences:
+                                    st.session_state.skipped_sentences.remove(sentence_id)
+                                    st.session_state.skipped_count -= 1
+                                
+                                if existing_annotation and 'id' in existing_annotation:
+                                    annotation_id = existing_annotation['id']
+                                    if update_annotation(annotation_id, label, confidence):
+                                        st.session_state.existing_annotations[sentence_id] = {
+                                            **existing_annotation,
+                                            "emotion_label": label,
+                                            "confidence_score": confidence
+                                        }
+                                        st.success(f"✅ Annotation updated successfully!")
+                                        
+                                        if idx + 1 < total:
+                                            st.session_state.current += 1
+                                            save_state_to_url()
+                                            st.rerun()
+                                        else:
+                                            st.session_state.completed = True
+                                            st.session_state.page = "complete"
+                                            save_state_to_url()
+                                            st.rerun()
+                                else:
+                                    new_annotation = save_annotation(st.session_state.annotator_id, sentence_id, label, confidence)
+                                    if new_annotation:
+                                        st.session_state.existing_annotations[sentence_id] = new_annotation
+                                        st.session_state.annotated_sentences.add(sentence_id)
+                                        st.session_state.labeled_count += 1
+                                        
+                                        if idx + 1 < total:
+                                            st.session_state.current += 1
+                                            save_state_to_url()
+                                            st.rerun()
+                                        else:
+                                            st.session_state.completed = True
+                                            st.session_state.page = "complete"
+                                            save_state_to_url()
+                                            st.rerun()
+                            except Exception as e:
+                                st.error(f"Error saving annotation: {str(e)}")
+                with col_no:
+                    if st.button("❌ No, adjust", use_container_width=True):
+                        st.rerun()
             else:
+                # Normal save flow
                 try:
                     if st.session_state.is_new_annotator:
                         supabase.table("annotators").insert({
@@ -732,13 +618,11 @@ if st.session_state.page == "annotate":
                         }).execute()
                         st.session_state.is_new_annotator = False
                     
-                    # If this sentence was previously skipped, remove it from skipped set
                     if sentence_id in st.session_state.skipped_sentences:
                         st.session_state.skipped_sentences.remove(sentence_id)
                         st.session_state.skipped_count -= 1
                     
                     if existing_annotation and 'id' in existing_annotation:
-                        # UPDATE existing annotation
                         annotation_id = existing_annotation['id']
                         if update_annotation(annotation_id, label, confidence):
                             st.session_state.existing_annotations[sentence_id] = {
@@ -746,7 +630,7 @@ if st.session_state.page == "annotate":
                                 "emotion_label": label,
                                 "confidence_score": confidence
                             }
-                            st.success(f"✅ Annotation updated successfully in database!")
+                            st.success(f"✅ Annotation updated successfully!")
                             
                             if idx + 1 < total:
                                 st.session_state.current += 1
@@ -758,7 +642,6 @@ if st.session_state.page == "annotate":
                                 save_state_to_url()
                                 st.rerun()
                     else:
-                        # SAVE new annotation
                         new_annotation = save_annotation(st.session_state.annotator_id, sentence_id, label, confidence)
                         if new_annotation:
                             st.session_state.existing_annotations[sentence_id] = new_annotation
@@ -774,28 +657,35 @@ if st.session_state.page == "annotate":
                                 st.session_state.page = "complete"
                                 save_state_to_url()
                                 st.rerun()
-                        
                 except Exception as e:
                     st.error(f"Error saving annotation: {str(e)}")
 
     with col_skip:
         if st.button("⏭️ Skip", use_container_width=True):
-            # Only increment skip counter if this sentence hasn't been annotated or skipped before
-            if sentence_id not in st.session_state.annotated_sentences and sentence_id not in st.session_state.skipped_sentences:
-                st.session_state.skipped_count += 1
-                st.session_state.skipped_sentences.add(sentence_id)
-            elif sentence_id in st.session_state.annotated_sentences:
-                st.warning("⚠️ This sentence was already annotated. You can't skip it now.")
-                st.stop()
-            
-            if idx + 1 < total:
-                st.session_state.current += 1
-                save_state_to_url()
-                st.rerun()
-            else:
-                st.session_state.completed = True
-                st.session_state.page = "complete"
-                save_state_to_url()
-                st.rerun()
+            # Show confirmation dialog for skip
+            st.warning("⚠️ Are you sure you want to skip this sentence?")
+            col_yes, col_no = st.columns(2)
+            with col_yes:
+                if st.button("✅ Yes, skip", use_container_width=True):
+                    # Only increment skip counter if not already annotated or skipped
+                    if sentence_id not in st.session_state.annotated_sentences and sentence_id not in st.session_state.skipped_sentences:
+                        st.session_state.skipped_count += 1
+                        st.session_state.skipped_sentences.add(sentence_id)
+                    elif sentence_id in st.session_state.annotated_sentences:
+                        st.warning("⚠️ This sentence was already annotated. You can't skip it now.")
+                        st.stop()
+                    
+                    if idx + 1 < total:
+                        st.session_state.current += 1
+                        save_state_to_url()
+                        st.rerun()
+                    else:
+                        st.session_state.completed = True
+                        st.session_state.page = "complete"
+                        save_state_to_url()
+                        st.rerun()
+            with col_no:
+                if st.button("❌ No, cancel", use_container_width=True):
+                    st.rerun()
 
     st.caption(f"👤 Logged in as: **{st.session_state.annotator_id}**")

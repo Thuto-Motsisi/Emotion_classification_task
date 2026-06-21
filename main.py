@@ -225,6 +225,40 @@ def generate_unique_id(supabase):
         if len(found_in_annotators.data) == 0 and len(found_in_annotations.data) == 0:
             return new_id
 
+def load_existing_annotation(annotator_id, sentence_id):
+    """Load existing annotation for a given sentence and annotator"""
+    try:
+        result = supabase.table("annotations").select("*").eq("annotator_id", annotator_id).eq("sentence_id", sentence_id).execute()
+        if result.data:
+            return result.data[0]
+        return None
+    except Exception as e:
+        st.error(f"Error loading annotation: {str(e)}")
+        return None
+
+def delete_annotation(annotation_id):
+    """Delete an existing annotation"""
+    try:
+        supabase.table("annotations").delete().eq("id", annotation_id).execute()
+        return True
+    except Exception as e:
+        st.error(f"Error deleting annotation: {str(e)}")
+        return False
+
+def save_annotation(annotator_id, sentence_id, emotion_label, confidence_score):
+    """Save a new annotation"""
+    try:
+        supabase.table("annotations").insert({
+            "annotator_id": annotator_id,
+            "sentence_id": int(sentence_id),
+            "emotion_label": emotion_label,
+            "confidence_score": confidence_score
+        }).execute()
+        return True
+    except Exception as e:
+        st.error(f"Error saving annotation: {str(e)}")
+        return False
+
 # Initialize session state variables
 def init_session_state():
     defaults = {
@@ -235,7 +269,9 @@ def init_session_state():
         "num_sentences": None,
         "sentences": None,
         "current": 0,
-        "completed": False
+        "completed": False,
+        "annotated_sentences": set(),  # Track which sentences have been annotated
+        "existing_annotations": {}  # Cache for existing annotations
     }
     for key, value in defaults.items():
         if key not in st.session_state:
@@ -347,6 +383,14 @@ if st.session_state.sentences is None:
             st.session_state.current = 0
             st.session_state.completed = False
             
+            # Pre-load existing annotations for all sentences
+            for idx, row in enumerate(st.session_state.sentences.iterrows()):
+                sentence_id = row[1]["sentence_id"]
+                existing = load_existing_annotation(annotator_id, sentence_id)
+                if existing:
+                    st.session_state.existing_annotations[sentence_id] = existing
+                    st.session_state.annotated_sentences.add(sentence_id)
+            
         except Exception as e:
             st.error(f"Error loading sentences: {str(e)}")
             st.stop()
@@ -390,6 +434,8 @@ if st.session_state.completed:
                 st.session_state.skipped_count = 0
                 st.session_state.current = 0
                 st.session_state.completed = False
+                st.session_state.annotated_sentences = set()
+                st.session_state.existing_annotations = {}
                 st.rerun()
         
         with col2:
@@ -409,19 +455,31 @@ if st.session_state.completed:
     
     st.stop()
 
+# Get current sentence data
+sentence_data = df.iloc[idx]
+sentence_id = int(sentence_data["sentence_id"])
+sentence = sentence_data["sentence"]
+
+# Check if this sentence has an existing annotation
+existing_annotation = st.session_state.existing_annotations.get(sentence_id)
+
 # Display current sentence
-sentence = df.iloc[idx]["sentence"]
 st.markdown(f"### 📝 Sentence {idx + 1} of {total}")
+if existing_annotation:
+    st.info(f"🔄 You already annotated this sentence. You can update it below.")
 st.markdown(f"> {sentence}")
 
-# Emotion selection
+# Emotion selection - set default values if existing annotation exists
 col1, col2 = st.columns(2)
+
+# Determine default emotion
+default_emotion = existing_annotation.get("emotion_label") if existing_annotation else None
 
 with col1:
     left_label = st.radio(
         "Select emotion:",
         ["Joy", "Sadness", "Anger", "Fear"],
-        index=None,
+        index=["Joy", "Sadness", "Anger", "Fear"].index(default_emotion) if default_emotion in ["Joy", "Sadness", "Anger", "Fear"] else None,
         key=f"left_{idx}"
     )
 
@@ -429,19 +487,20 @@ with col2:
     right_label = st.radio(
         "",
         ["Disgust", "Surprise", "Neutral"],
-        index=None,
+        index=["Disgust", "Surprise", "Neutral"].index(default_emotion) if default_emotion in ["Disgust", "Surprise", "Neutral"] else None,
         key=f"right_{idx}"
     )
 
 label = left_label or right_label
 
-# Confidence slider
+# Confidence slider - set default if existing annotation exists
+default_confidence = existing_annotation.get("confidence_score") if existing_annotation else 0.5
 confidence = st.slider(
     "Confidence level (0 = not confident, 1 = very confident)",
     min_value=0.0,
     max_value=1.0,
     step=0.05,
-    value=0.5,
+    value=default_confidence,
     key=f"conf_{idx}"
 )
 
@@ -458,8 +517,14 @@ with col2:
 with col3:
     st.metric("Remaining", total - idx - 1)
 
-# Action buttons
-col_next, col_skip = st.columns([4, 1])
+# Action buttons - Three columns for Previous, Save, Skip
+col_prev, col_next, col_skip = st.columns([2, 4, 2])
+
+with col_prev:
+    if st.button("⬅️ Previous", use_container_width=True, disabled=(idx == 0)):
+        if idx > 0:
+            st.session_state.current -= 1
+            st.rerun()
 
 with col_next:
     if st.button("✅ Save & Next", use_container_width=True):
@@ -476,29 +541,44 @@ with col_next:
                     }).execute()
                     st.session_state.is_new_annotator = False
                 
-                # Save annotation
-                supabase.table("annotations").insert({
-                    "annotator_id": st.session_state.annotator_id,
-                    "sentence_id": int(df.iloc[idx]["sentence_id"]),
-                    "emotion_label": label,
-                    "confidence_score": confidence
-                }).execute()
+                # Check if annotation already exists
+                if existing_annotation:
+                    # Delete existing annotation
+                    annotation_id = existing_annotation.get("id")
+                    if annotation_id and delete_annotation(annotation_id):
+                        # Remove from session state
+                        if sentence_id in st.session_state.existing_annotations:
+                            del st.session_state.existing_annotations[sentence_id]
+                        if sentence_id in st.session_state.annotated_sentences:
+                            st.session_state.annotated_sentences.remove(sentence_id)
+                        st.session_state.labeled_count -= 1
                 
-                st.session_state.labeled_count += 1
-                
-                # Move to next sentence
-                if idx + 1 < total:
-                    st.session_state.current += 1
-                    st.rerun()
-                else:
-                    st.session_state.completed = True
-                    st.rerun()
+                # Save new annotation
+                if save_annotation(st.session_state.annotator_id, sentence_id, label, confidence):
+                    # Update session state
+                    st.session_state.existing_annotations[sentence_id] = {
+                        "id": None,  # We don't have the ID yet, but we'll fetch it if needed
+                        "sentence_id": sentence_id,
+                        "emotion_label": label,
+                        "confidence_score": confidence
+                    }
+                    st.session_state.annotated_sentences.add(sentence_id)
+                    st.session_state.labeled_count += 1
+                    
+                    # Move to next sentence
+                    if idx + 1 < total:
+                        st.session_state.current += 1
+                        st.rerun()
+                    else:
+                        st.session_state.completed = True
+                        st.rerun()
                     
             except Exception as e:
                 st.error(f"Error saving annotation: {str(e)}")
 
 with col_skip:
     if st.button("⏭️ Skip", use_container_width=True):
+        # If there's an existing annotation, keep it but move on
         if idx + 1 < total:
             st.session_state.skipped_count += 1
             st.session_state.current += 1
@@ -511,5 +591,8 @@ with col_skip:
 progress = (idx + 1) / total if total > 0 else 0
 st.progress(progress)
 
-
+# Navigation info
+st.caption(f"📍 You are on sentence {idx + 1} of {total}")
+if existing_annotation:
+    st.caption("🔄 This sentence has been annotated. You can update your annotation.")
 

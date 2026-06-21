@@ -241,8 +241,7 @@ def update_annotation(annotation_id, emotion_label, confidence_score):
     try:
         supabase.table("annotations").update({
             "emotion_label": emotion_label,
-            "confidence_score": confidence_score,
-            "updated_at": datetime.now().isoformat()
+            "confidence_score": confidence_score
         }).eq("id", annotation_id).execute()
         return True
     except Exception as e:
@@ -252,12 +251,12 @@ def update_annotation(annotation_id, emotion_label, confidence_score):
 def save_annotation(annotator_id, sentence_id, emotion_label, confidence_score):
     """Save a new annotation"""
     try:
+        # Only include columns that exist in your table
         result = supabase.table("annotations").insert({
             "annotator_id": annotator_id,
             "sentence_id": int(sentence_id),
             "emotion_label": emotion_label,
-            "confidence_score": confidence_score,
-            "created_at": datetime.now().isoformat()
+            "confidence_score": confidence_score
         }).execute()
         return result.data[0] if result.data else None
     except Exception as e:
@@ -595,7 +594,8 @@ if st.session_state.page == "annotate":
             df_review = pd.DataFrame(result.data)
             
             if not df_review.empty:
-                display_cols = [col for col in ["sentence_id", "emotion_label", "confidence_score", "created_at"] if col in df_review.columns]
+                # Only display columns that exist
+                display_cols = [col for col in ["sentence_id", "emotion_label", "confidence_score"] if col in df_review.columns]
                 st.dataframe(df_review[display_cols], use_container_width=True)
             
             col1, col2 = st.columns(2)

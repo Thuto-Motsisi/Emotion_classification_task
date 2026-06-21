@@ -196,24 +196,6 @@ if "sentences" not in st.session_state:
     st.session_state.current = 0
 
 
-
-
-
-
-
-
-
-
-
-
-
-# Pick 10 unlabelled sentences at the start
-if "sentences" not in st.session_state:
-    data = supabase.table("sentences").select("*").limit(10).execute()
-    df = pd.DataFrame(data.data)
-    st.session_state.sentences = df
-    st.session_state.current = 0
-
 df = st.session_state.sentences
 idx = st.session_state.current
 total = len(df)
@@ -238,37 +220,67 @@ if label:
     st.write(f"You picked **{label}** with confidence **{confidence}**")
 
 
-# if st.button("Save Label"):
-#     wb = load_workbook("emotional_sentences.xlsx")
-#     ws = wb["emotion_sentences"]
-#     ws["C2"] = label
-#     ws["D2"] = confidence
-#     wb.save("emotional_sentences.xlsx")
-#     st.success("Saved!")
 
-if st.button("Save & Next"):
-    if not label:
-        st.warning("Please select an emotion before continuing!")
-    elif confidence == 0.0:
-        st.warning("Please set a confidence level before continuing!")
-    else:
-        if st.session_state.get("is_new_annotator") :
-            supabase.table("annotators").insert({"annotator_id" : st.session_state.annotator_id}).execute()
-            st.session_state.is_new_annotator = False
+col_next, col_skip = st.columns([4, 1])
 
-        sentence_id = int(df.iloc[idx]["sentence_id"])
-        supabase.table("annotations").insert({
-            "annotator_id" : st.session_state.annotator_id,
-            "sentence_id" : sentence_id,
-            "emotion_label" : label,
-            "confidence_score" : confidence
-        }).execute()
+with col_next:
+    if st.button("Save & Next"):
+        if not label:
+            st.warning("Please select an emotion.")
+        elif confidence == 0.0:
+            st.warning("Please set a confidence level.")
+        else:
+            if st.session_state.get("is_new_annotator"):
+                supabase.table("annotators").insert({
+                    "annotator_id": st.session_state.annotator_id
+                }).execute()
+                st.session_state.is_new_annotator = False
 
+            supabase.table("annotations").insert({
+                "annotator_id": st.session_state.annotator_id,
+                "sentence_id": int(df.iloc[idx]["sentence_id"]),
+                "emotion_label": label,
+                "confidence_score": confidence
+            }).execute()
+
+            if idx + 1 < total:
+                st.session_state.current += 1
+                st.rerun()
+            else:
+                st.success("All sentences completed!")
+
+with col_skip:
+    if st.button("Skip"):
         if idx + 1 < total:
             st.session_state.current += 1
             st.rerun()
         else:
-            st.success("All Sentences labelled!")
+            st.success("All sentences completed!")
+
+
+# if st.button("Save & Next"):
+#     if not label:
+#         st.warning("Please select an emotion before continuing!")
+#     elif confidence == 0.0:
+#         st.warning("Please set a confidence level before continuing!")
+#     else:
+#         if st.session_state.get("is_new_annotator") :
+#             supabase.table("annotators").insert({"annotator_id" : st.session_state.annotator_id}).execute()
+#             st.session_state.is_new_annotator = False
+
+#         sentence_id = int(df.iloc[idx]["sentence_id"])
+#         supabase.table("annotations").insert({
+#             "annotator_id" : st.session_state.annotator_id,
+#             "sentence_id" : sentence_id,
+#             "emotion_label" : label,
+#             "confidence_score" : confidence
+#         }).execute()
+
+#         if idx + 1 < total:
+#             st.session_state.current += 1
+#             st.rerun()
+#         else:
+#             st.success("All Sentences labelled!")
 
 st.write(f"{remaining} more sentences to go")
 

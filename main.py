@@ -1,0 +1,624 @@
+import streamlit as st
+import pandas as pd
+import random
+from supabase import create_client
+import time
+import json
+from datetime import datetime
+
+# Initialize Supabase client
+url = st.secrets["SUPABASE_URL"]
+key = st.secrets["SUPABASE_KEY"]
+supabase = create_client(url, key)
+
+def generate_unique_id(supabase):
+    """ Generates unique id for paticipants. A unique id is a generated id that is not found in the annotations table and the annotators table """
+    animals = ["CAT", "DOG", "OWL", "FOX", "RAM", "HEN", "COW"]
+    while True:
+        animal = random.choice(animals)
+        number = random.randint(1, 999)
+        new_id = f"ANN-{animal}-{number:03d}"
+
+        found_in_annotators = supabase.table("annotators").select("annotator_id").eq("annotator_id", new_id).execute()
+        found_in_annotations = supabase.table("annotations").select("annotator_id").eq("annotator_id", new_id).execute()
+
+        if len(found_in_annotators.data) == 0 and len(found_in_annotations.data) == 0:
+            return new_id
+
+def load_existing_annotation(annotator_id, sentence_id):
+    """Looks at the annotations table to check if annotator_id has already labeled the sentence. """
+    try:
+        result = supabase.table("annotations").select("*").eq("annotator_id", annotator_id).eq("sentence_id", sentence_id).execute()
+        if result.data:
+            return result.data[0]
+        return None
+    except Exception as e:
+        st.error(f"Error loading annotation: {str(e)}")
+        return None
+
+def update_annotation(annotation_id, emotion_label, confidence_score):
+    """Updates an existing annotation entry in the annotations table if the user changes their emotion label or confidence level."""
+    try:
+        supabase.table("annotations").update({
+            "emotion_label": emotion_label,
+            "confidence_score": confidence_score
+        }).eq("id", annotation_id).execute()
+        return True
+    except Exception as e:
+        st.error(f"Error updating annotation: {str(e)}")
+        return False
+
+def save_annotation(annotator_id, sentence_id, emotion_label, confidence_score):
+    """Inserts a new annotation entry to the annotations table."""
+    try:
+        result = supabase.table("annotations").insert({
+            "annotator_id": annotator_id,
+            "sentence_id": int(sentence_id),
+            "emotion_label": emotion_label,
+            "confidence_score": confidence_score
+        }).execute()
+        return result.data[0] if result.data else None
+    except Exception as e:
+        st.error(f"Error saving annotation: {str(e)}")
+        return None
+
+
+def save_state_to_url():
+    """Save current session state to URL query parameters. (For users to resume their session if they reload page)"""
+    try:
+        state = {
+            "annotator_id": st.session_state.get("annotator_id", ""),
+            "current": st.session_state.get("current", 0),
+            "page": st.session_state.get("page", "login"),
+            "num_sentences": st.session_state.get("num_sentences", ""),
+            "labeled_count": st.session_state.get("labeled_count", 0),
+            "skipped_count": st.session_state.get("skipped_count", 0),
+            "consent_given": st.session_state.get("consent_given", False),
+            "completed": st.session_state.get("completed", False),
+        }
+        #Converting the python dictionary to json string
+        state_json = json.dumps(state)
+        #storing the entire state of the user's session as a json string in URL query parameters
+        st.query_params["app_state"] = state_json
+        return True
+    except Exception as e:
+        return False
+
+
+def load_state_from_url():
+    """Reads the session state from the URL and restores it to the apps session state."""
+    try:
+        if "app_state" in st.query_params:
+            #retrieves the value of the app_state parameter from the URL , then convert thiis json string back into a python dictionary.
+            state_json = st.query_params["app_state"]
+            state = json.loads(state_json)
+            
+            #loop through the restored dictionary and set each value back into the session state.
+            for key, value in state.items():
+                st.session_state[key] = value
+            return True
+        return False
+    except Exception as e:
+        return False
+
+
+def init_session_state():
+    """Initialize session state variables"""
+    defaults = {
+        "annotator_id": None,
+        "is_new_annotator": False,
+        "labeled_count": 0,
+        "skipped_count": 0,
+        "num_sentences": None,
+        "sentences": None,
+        "current": 0,
+        "completed": False,
+        "annotated_sentences": set(),
+        "existing_annotations": {},
+        "consent_given": False,
+        "page": "login",
+        "state_loaded": False,
+        "skipped_sentences": set(),
+        "show_skip_confirm": False,
+        "show_save_confirm": False,
+        "pending_skip": False,
+        "pending_save": False
+    }
+    for key, value in defaults.items():
+        if key not in st.session_state:
+            st.session_state[key] = value
+
+init_session_state()
+
+# Try to load state from URL on first run
+if not st.session_state.state_loaded:
+    state_loaded = load_state_from_url()
+    if state_loaded and st.session_state.annotator_id:
+        st.success(f"Session restored! Welcome back!")
+    st.session_state.state_loaded = True
+
+
+def display_user_id():
+    """Display the user ID """
+    if st.session_state.annotator_id:
+        st.markdown(
+            f"""
+            <div style="
+                position: fixed;
+                top: 10px;
+                right: 20px;
+                z-index: 999;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                padding: 8px 20px;
+                border-radius: 25px;
+                font-size: 15px;
+                font-weight: 600;
+                color: white;
+                box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+                border: 2px solid rgba(255, 255, 255, 0.2);
+                backdrop-filter: blur(5px);
+                display: inline-block;
+                letter-spacing: 0.5px;
+            ">
+                {st.session_state.annotator_id}
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+# Display user ID at the top right of every page
+display_user_id()
+
+# LOGIN PAGE 
+if st.session_state.annotator_id is None:
+    st.title("Welcome to the Setswana Emotion Annotation Task!")
+    st.write("Please enter your user ID or get a new one")
+    
+    #Get the participant's user ID
+    user_input = st.text_input("Enter your user ID here", placeholder="e.g., ANN-CAT-123")
+    
+    col1, col2 = st.columns(2)
+    
+    #Log in button checks if user ID exists in the annotators table, if it exists app goes to the next page(consent page).
+    #If user ID doesn't exist in table, prompt the user to enter the correct ID.
+    with col1:
+        if st.button("Log In", use_container_width=True):
+            if user_input:
+                try:
+                    #Query the annotators table to check if the ID the user entered exists. If not found an error message is shown to prompts the user to enter correct ID 
+                    existing = supabase.table("annotators").select("annotator_id").eq("annotator_id", user_input).execute()
+                    if len(existing.data) == 0:
+                        st.error("ID not found. Please make sure you entered the correct user ID")
+                    else:
+                        st.session_state.annotator_id = user_input
+                        st.session_state.page = "consent"
+                        save_state_to_url()
+                        st.rerun()
+                except Exception as e:
+                    st.error(f"Login error: {str(e)}")
+            else:
+                st.warning("Please enter your user ID first")
+    
+    #Generate unique user ID if user does not have a user ID
+    with col2:
+        if st.button("I don't have a user ID", use_container_width=True):
+            try:
+                new_id = generate_unique_id(supabase)
+                st.session_state.annotator_id = new_id
+                st.session_state.is_new_annotator = True
+                st.session_state.page = "consent"
+                st.success(f"Your new USER_ID is: {new_id}. Please save this for future use.")
+                save_state_to_url()
+                st.rerun()
+            except Exception as e:
+                st.error(f"Error generating ID: {str(e)}")
+    
+    st.stop()
+
+# CONSENT PAGE 
+if st.session_state.page == "consent":
+    st.title("Informed Consent")
+    
+    st.markdown("---")
+    
+    st.subheader("Study Information")
+    st.write("""
+    **Research Title:** Evaluating Pseudo-Labeling for Setswana Emotion Classification.
+    
+    You are being asked to participate in a research study to label Setswana sentences with emotion labels. 
+    Your contributions will help improve Setswana emotion classification models.
+    
+    **Procedure:** You will be presented with Setswana sentences and asked to:
+    - Select an emotion label you believe best describes the sentence (Joy, Sadness, Anger, Fear, Disgust, Surprise, or Neutral)
+    - Rate your confidence in the label you have chosen. (0.0 indicates that you are least confident about the label, 1.0 indicates that you are most confident about the label.)
+    """)
+    
+    st.markdown("---")
+    
+    st.subheader("Consent Details")
+    
+    consent_items = [
+        "I confirm that I have read and understand the information provided above.",
+        "I agree to the use of my annotations for research purposes.",
+        "I understand that I shall not provide my Personal Identifiable Information",
+        "I understand that my participation is voluntary and I can withdraw at any time.",
+        "I agree to perform the annotation task to the best of my ability."
+    ]
+    
+    #Ensuring all boxes are checked
+    all_checked = True
+    for i, item in enumerate(consent_items):
+        checked = st.checkbox(item, key=f"consent_{i}")
+        if not checked:
+            all_checked = False
+    
+    st.markdown("---")
+    
+    with st.expander("Data Privacy and Security"):
+        st.write("""
+        - No personally identifiable information is collected
+        - Your user ID is randomly generated and does not contain personal information
+        - Your data will only be used for research purposes
+        - All annotations are stored securely in a database
+        - You can request to have your data removed at any time
+        """)
+    
+    with st.expander("Contact Information"):
+        st.write("""
+        If you have any questions or concerns about this study, please contact:
+        
+        **Researcher:** Thuto Motsisi
+        **Email:** 2096335@students.wits.ac.za
+        **Institution:** University of the Witwatersrand
+        """)
+    
+    st.markdown("---")
+    
+    col1, col2, col3 = st.columns([1, 2, 1])
+    with col2:
+        if st.button("I Consent to Participate", use_container_width=True, disabled=not all_checked):
+            st.session_state.consent_given = True
+            st.session_state.page = "select_sentences"
+            try:
+                supabase.table("consent_logs").insert({
+                    "annotator_id": st.session_state.annotator_id,
+                    "consent_given": True,
+                    "timestamp": datetime.now().isoformat()
+                }).execute()
+            except:
+                pass
+            save_state_to_url()
+            st.rerun()
+    
+    #Make sure that all boxes are checked before we continue with the labeling task
+    if not all_checked:
+        st.warning("Please check all boxes above to give your consent.")
+    
+    st.stop()
+
+# Participant Selecting the number of sentences they are comfortable labeling.
+if st.session_state.page == "select_sentences":
+    st.info("Choose how many sentences you would like to label below")
+    
+    choice = st.selectbox(
+        "Select number of sentences",
+        [15, 25, 50, 75, 100],
+        index=0
+    )
+    
+    if st.button("Start Labeling", use_container_width=True):
+        st.session_state.num_sentences = choice
+        st.session_state.page = "annotate"
+        save_state_to_url()
+        st.rerun()
+    st.stop()
+
+# Load the number of sentences the participant has chosen to label
+if st.session_state.page == "annotate" and st.session_state.sentences is None:
+    with st.spinner("Loading sentences"):
+        annotator_id = st.session_state.annotator_id
+        limit = st.session_state.num_sentences
+        
+        try:
+            #Select all sentences in the dataset
+            all_sentences = supabase.table("sentences").select("*").order("sentence_id").execute().data
+            
+            if not all_sentences:
+                st.error("No sentences found in the database.")
+                st.stop()
+            
+            eligible = []
+
+            for s in all_sentences:
+                sid = s["sentence_id"]
+                #Count existing annotations in the dataset for this sentence id. Count_response is a dictionary that has the "count" key.
+                count_response = supabase.table("annotations").select("*", count="exact").eq("sentence_id", sid).execute()
+                #check if count_response has count value, if false count the number of items in the data list
+                count = count_response.count if hasattr(count_response, 'count') else len(count_response.data)
+                
+                #if the sentence has already been labeled by 3 people then move to the next sentence. if less than 3 then select this sentence
+                if count >= 3:
+                    continue
+                
+                #check if annotator_id already labeled sentence_id, if they havent then add the sentence to eligible sentence for the user to label.
+                already = supabase.table("annotations").select("sentence_id").eq("sentence_id", sid).eq("annotator_id", annotator_id).execute()
+                if not already.data:
+                    eligible.append(s)
+                    if len(eligible) == limit:
+                        break
+            
+            if not eligible:
+                st.warning("No eligible sentences found. Either you have labeled all sentences, or they have been labeled 3 times by participants.")
+                st.stop()
+            
+            st.session_state.sentences = pd.DataFrame(eligible)
+            st.session_state.completed = False
+            
+            # Reset tracking sets for new session
+            st.session_state.skipped_sentences = set()
+            st.session_state.annotated_sentences = set()
+            st.session_state.existing_annotations = {}
+            st.session_state.labeled_count = 0
+            
+            # Pre-load existing annotations for all sentences
+            for idx, row in enumerate(st.session_state.sentences.iterrows()):
+                sentence_id = row[1]["sentence_id"]                             #which .iterrows each row is a tuple. (index,series). so here row[0] is the index data and row[1] is the actual row data
+                #check if user has labeled the sentence
+                existing = load_existing_annotation(annotator_id, sentence_id)
+                if existing:
+                    st.session_state.existing_annotations[sentence_id] = existing
+                    st.session_state.annotated_sentences.add(sentence_id)
+                    st.session_state.labeled_count += 1
+            
+            save_state_to_url()
+            
+        except Exception as e:
+            st.error(f"Error loading sentences: {str(e)}")
+            st.stop()
+
+# Labeling Page
+if st.session_state.page == "annotate":
+    df = st.session_state.sentences
+    idx = st.session_state.current
+    total = len(df)
+
+    if total == 0:
+        st.warning("No sentences to annotate.")
+        st.stop()
+
+    # Check if all sentences are completed (annotated or skipped)
+    all_processed = all(
+        df.iloc[i]["sentence_id"] in st.session_state.annotated_sentences or 
+        df.iloc[i]["sentence_id"] in st.session_state.skipped_sentences 
+        for i in range(total)
+    )
+    #if all sentences are labeled(or skipped) move to the completion page
+    if all_processed and idx >= total:
+        st.session_state.completed = True
+        st.session_state.page = "complete"
+
+    if st.session_state.page == "complete":
+        st.balloons()
+        st.title("Thank You for Your Participation!")
+        
+        st.markdown("""
+        ### We Appreciate Your Contribution!
+        
+        Your annotations will help advance Setswana emotion classification models. 
+        Your time and effort are greatly valued.
+        """)
+        st.stop()
+
+    # Get current sentence data
+    sentence_data = df.iloc[idx]
+    sentence_id = int(sentence_data["sentence_id"])
+    sentence = sentence_data["sentence"]
+
+    # Check if user has already seen the sentence by checking if this sentence has an existing annotation or was skipped by the user (gives True or False)
+    #Use this on the labeling page
+    existing_annotation = st.session_state.existing_annotations.get(sentence_id)
+    is_skipped = sentence_id in st.session_state.skipped_sentences
+    is_annotated = sentence_id in st.session_state.annotated_sentences
+
+    #Main Labeling page
+    st.markdown(f"### Sentence {idx + 1} of {total}")
+    if existing_annotation:
+        st.info(f"You already annotated this sentence with **{existing_annotation['emotion_label']}** (confidence: {existing_annotation['confidence_score']:.2f}). You can update it below.")
+    elif is_skipped:
+        st.warning(f"You skipped this sentence previously.")
+    
+    # Make the sentence more visible
+    st.markdown(
+        f"""
+        <div style="
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 12px;
+            border-left: 6px solid #667eea;
+            font-size: 20px;
+            font-weight: 500;
+            margin: 15px 0 25px 0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            line-height: 1.6;
+        ">
+            {sentence}
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+
+    # Emotion selection
+    st.subheader("Select Emotion")
+    col1, col2 = st.columns(2)
+
+    default_emotion = existing_annotation.get("emotion_label") if existing_annotation else None
+
+    with col1:
+        left_label = st.radio(
+            "",
+            ["Joy", "Sadness", "Anger", "Fear"],
+            index=["Joy", "Sadness", "Anger", "Fear"].index(default_emotion) if default_emotion in ["Joy", "Sadness", "Anger", "Fear"] else None,
+            key=f"left_{idx}"
+        )
+
+    with col2:
+        right_label = st.radio(
+            "",
+            ["Disgust", "Surprise", "Neutral"],
+            index=["Disgust", "Surprise", "Neutral"].index(default_emotion) if default_emotion in ["Disgust", "Surprise", "Neutral"] else None,
+            key=f"right_{idx}"
+        )
+
+    label = left_label or right_label
+
+    # Confidence slider - starts at 0.0
+    st.subheader("Confidence Level")
+    default_confidence = existing_annotation.get("confidence_score") if existing_annotation else 0.0
+    confidence = st.slider(
+        "",
+        min_value=0.0,
+        max_value=1.0,
+        step=0.05,
+        value=default_confidence,
+        key=f"conf_{idx}"
+    )
+
+    if label:
+        st.success(f"Selected: **{label}** with confidence **{confidence:.2f}**")
+
+    # Progress bar to show participant how many sentences they have labeled and how many more to go
+    st.markdown("---")
+    
+    # Calculate remaining sentences to be labeled
+    remaining = sum(1 for i in range(total) 
+                   if df.iloc[i]["sentence_id"] not in st.session_state.annotated_sentences 
+                   and df.iloc[i]["sentence_id"] not in st.session_state.skipped_sentences)
+    
+    progress = (total - remaining) / total if total > 0 else 0
+    st.progress(progress, text=f"Progress: {int(progress * 100)}%")
+    
+    col1, col2, col3, col4 = st.columns(4)
+    with col1:
+        st.metric("Labeled", st.session_state.labeled_count)
+    with col2:
+        st.metric("Skipped", st.session_state.skipped_count)
+    with col3:
+        st.metric("Remaining", remaining)
+    with col4:
+        st.metric("Total", total)
+
+    st.caption(f"Sentence {idx + 1} of {total}")
+
+    # Action Buttons
+    col_prev, col_next, col_skip = st.columns([2, 4, 2])
+
+    with col_prev:
+        if st.button("Previous", use_container_width=True, disabled=(idx == 0)):
+            if idx > 0:
+                st.session_state.current -= 1
+                save_state_to_url()
+                st.rerun()
+
+    with col_next:
+        if st.button("Save & Next", use_container_width=True, type="primary"):
+            # Check if emotion label is selected
+            if not label:
+                st.error("Please select an emotion label before saving.")
+            elif confidence == 0.0:
+                # Show warning if user has not indicated their confidence level
+                st.warning(f"Please select a Confidence level")
+            else:
+                #save the labels
+                try:
+                    #if the user is new (generated id at beginning of the session), add the id to annotators table. 
+                    if st.session_state.is_new_annotator:
+                        supabase.table("annotators").insert({"annotator_id": st.session_state.annotator_id}).execute()
+                        st.session_state.is_new_annotator = False
+                    #check if user previously skipped the sentence. if they did but they are now saving it remove it from skipped set and decrease "skipped" counter.
+                    if sentence_id in st.session_state.skipped_sentences:
+                        st.session_state.skipped_sentences.remove(sentence_id)
+                        st.session_state.skipped_count -= 1
+                    #check if this id already labeled the sentence in this session, update the annotation by keeping all existing annotation fields, but change emotion label and confidence score
+                    if existing_annotation and 'id' in existing_annotation:
+                        annotation_id = existing_annotation['id']
+                        if update_annotation(annotation_id, label, confidence):
+                            st.session_state.existing_annotations[sentence_id] = {
+                                **existing_annotation,
+                                "emotion_label": label,
+                                "confidence_score": confidence
+                            }
+                            st.success(f"Annotation updated successfully!")
+                            #move to next sentence or complete the labeling task
+                            if idx + 1 < total:
+                                st.session_state.current += 1
+                                save_state_to_url()
+                                st.rerun()
+                            else:
+                                st.session_state.completed = True
+                                st.session_state.page = "complete"
+                                save_state_to_url()
+                                st.rerun()
+                    else:
+                        #add new annotation record to the database. user has not labeled or skipped this sentence 
+                        new_annotation = save_annotation(st.session_state.annotator_id, sentence_id, label, confidence)
+                        #Check if insert was successful
+                        if new_annotation:
+                            st.session_state.existing_annotations[sentence_id] = new_annotation
+                            st.session_state.annotated_sentences.add(sentence_id)
+                            st.session_state.labeled_count += 1
+                            
+                            #Move to next sentence to label 
+                            if idx + 1 < total:
+                                st.session_state.current += 1
+                                save_state_to_url()
+                                st.rerun()
+                            else:
+                                st.session_state.completed = True
+                                st.session_state.page = "complete"
+                                save_state_to_url()
+                                st.rerun()
+                except Exception as e:
+                    st.error(f"Error saving annotation: {str(e)}")
+
+    with col_skip:
+        if st.button("Skip", use_container_width=True):
+            # Set pending skip flag
+            st.session_state.pending_skip = True
+        
+        # Ask the user if they are sure they want to skip sentence.
+        if st.session_state.pending_skip:
+            if label:
+                st.warning(f"You selected **'{label}'** with confidence **{confidence:.2f}**. Are you sure you want to skip?")
+            else:
+                st.warning("You haven't selected an emotion. Are you sure you want to skip?")
+            
+            col_yes, col_no = st.columns(2)
+            with col_yes:
+                if st.button("Yes, Skip", use_container_width=True):
+                    #Only increment skip counter if not already annotated or skipped
+                    if sentence_id not in st.session_state.annotated_sentences and sentence_id not in st.session_state.skipped_sentences:
+                        st.session_state.skipped_count += 1
+                        st.session_state.skipped_sentences.add(sentence_id)
+                        st.success(f"Sentence skipped!")
+                    elif sentence_id in st.session_state.annotated_sentences:
+                        st.warning("This sentence was already annotated. You can't skip it now.")
+                        st.session_state.pending_skip = False
+                        st.rerun()
+                    
+                    # Move to next sentence
+                    st.session_state.pending_skip = False
+                    if idx + 1 < total:
+                        st.session_state.current += 1
+                        save_state_to_url()
+                        st.rerun()
+                    else:
+                        st.session_state.completed = True
+                        st.session_state.page = "complete"
+                        save_state_to_url()
+                        st.rerun()
+            with col_no:
+                if st.button("No, Stay", use_container_width=True):
+                    st.session_state.pending_skip = False
+                    st.rerun()
+
+    st.caption(f"Logged in as: **{st.session_state.annotator_id}**")

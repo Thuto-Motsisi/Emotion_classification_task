@@ -169,7 +169,7 @@ def display_user_id():
 # Display user ID at the top right of every page
 display_user_id()
 
-# LOGIN PAGE 
+# Login Page 
 if st.session_state.annotator_id is None:
     st.title("Welcome to the Setswana Emotion Annotation Task!")
     st.write("Please enter your user ID or get a new one")
@@ -215,7 +215,7 @@ if st.session_state.annotator_id is None:
     
     st.stop()
 
-# CONSENT PAGE 
+# Consent Page 
 if st.session_state.page == "consent":
     st.title("Informed Consent")
     
@@ -397,16 +397,6 @@ if st.session_state.page == "annotate":
         st.session_state.completed = True
         st.session_state.page = "complete"
 
-    if st.session_state.page == "complete":
-        st.balloons()
-        st.title("Thank You for Your Participation!")
-        
-        st.markdown("""
-        ### We Appreciate Your Contribution!
-        
-        Your annotations will help advance Setswana emotion classification models. 
-        Your time and effort are greatly valued.
-        """)
         st.stop()
 
     # Get current sentence data
@@ -620,5 +610,14 @@ if st.session_state.page == "annotate":
                 if st.button("No, Stay", use_container_width=True):
                     st.session_state.pending_skip = False
                     st.rerun()
-
+    if st.session_state.page == "complete":
+            st.balloons()
+            st.title("Thank You for Your Participation!")
+            
+            st.markdown("""
+            ### We Appreciate Your Contribution!
+            
+            Your annotations will help advance Setswana emotion classification models. 
+            Your time and effort are greatly valued.
+            """)
     st.caption(f"Logged in as: **{st.session_state.annotator_id}**")

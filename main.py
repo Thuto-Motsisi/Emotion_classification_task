@@ -21,4 +21,4 @@ for item in consent_statements:
   if not checked:
     all_checked = False
 
-if st.button("Start labeling", disabled= not all_checked)
+st.button("Start labeling", disabled= not all_checked)

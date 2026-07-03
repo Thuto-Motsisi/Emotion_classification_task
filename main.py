@@ -14,3 +14,11 @@ consent_statements = [
   "I consent to the emotion labels and confidence scores I provide to be included in an anonymized dataset and to be released after completion of the researchers MSc study, and no later than 3 years after the data has been collected.",
   "I consent to participate in this research study."
 ]
+
+all_checked = True
+for item in consent_statements:
+  checked = st.checkbox(item)
+  if not checked:
+    all_checked = False
+
+if st.button("Start labeling", disabled= not all_checked)

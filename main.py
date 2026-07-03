@@ -29,5 +29,5 @@ if st.session_state.page == "information_and_consent":
   if st.button("Start labeling", disabled= not all_checked):
     st.session_state.page = "choosing_num_sentences"
     
-if st.session_state.page == "choosing_num_sentence"
+if st.session_state.page == "choosing_num_sentence":
   st.write("choose the number of sentences you would love to label")

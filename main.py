@@ -73,14 +73,15 @@ if st.session_state.page == "login_page":
     new_id = generate_unique_id(supabase)
     st.write(f"Your new user id is: {new_id}, Please store it somewhere safely so that you can use it next time.")
   if st.button("Log in"):
-    valid = id_exists(supabase,user_id)
-    if valid != True :
-      st.write("The user id is invalid, please create a new one")
-    else:
+    valid = (id_exists(supabase,user_id) or user_id==new_id)
+    if valid==True :
       st.session_state.page ="choosing_num_sentences"
       st.rerun()
+    else:
+      st.write("The user id is invalid, please create a new one")
       
-
+      
+      
 # if st.session_state.page == "choosing_num_sentences":
 #   num_sentences_choices = [15,25,30,50,75,100]
 #   num_sentences_selected = st.selectbox("Please choose the number of sentences you would love to label", num_sentences_choices)

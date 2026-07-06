@@ -10,11 +10,10 @@ supabase = create_client(url,key)
 
 def id_exists(supabase) :
   """checks if the id exists in the stored data"""
-  
-    found_in_annotators = supabase.table("annotators").select("annotator_id").eq("annotator_id", user_id).execute()
-    found_in_annotations = supabase.table("annotations").select("annotator_id").eq("annotator_id", user_id).execute()
-    if not len(found_in_annotators.data) == 0 and len(found_in_annotations.data) == 0:
-      return True
+  found_in_annotators = supabase.table("annotators").select("annotator_id").eq("annotator_id", user_id).execute()
+  found_in_annotations = supabase.table("annotations").select("annotator_id").eq("annotator_id", user_id).execute()
+  if not len(found_in_annotators.data) == 0 and len(found_in_annotations.data) == 0:
+    return True
 
 def generate_unique_id(supabase):
     """ Generates unique id for paticipants. conditions: id is not found in the annotations table and the annotators table """
@@ -79,10 +78,10 @@ if st.session_state.page == "login_page":
       st.rerun()
       
 
-if st.session_state.page == "choosing_num_sentences":
-  num_sentences_choices = [15,25,30,50,75,100]
-  num_sentences_selected = st.selectbox("Please choose the number of sentences you would love to label", num_sentences_choices)
+# if st.session_state.page == "choosing_num_sentences":
+#   num_sentences_choices = [15,25,30,50,75,100]
+#   num_sentences_selected = st.selectbox("Please choose the number of sentences you would love to label", num_sentences_choices)
   
-  sent_length = (supabase.table("sentences").select("sentence", count = "exact", head = True).execute()).count
-  for i = 0 to num_sentences_selected
-  st.write("choose the number of sentences you would love to label")
+#   sent_length = (supabase.table("sentences").select("sentence", count = "exact", head = True).execute()).count
+#   for i = 0 to num_sentences_selected
+#   st.write("choose the number of sentences you would love to label")

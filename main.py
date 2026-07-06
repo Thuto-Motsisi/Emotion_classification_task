@@ -1,5 +1,6 @@
 import streamlit as st
 from supabase import create_client
+import random
 
 #Initialize supabase client
 url = st.secrets["SUPABASE_URL"]
@@ -23,8 +24,8 @@ def generate_unique_id(supabase):
         animal = random.choice(animals)
         number = random.randint(1, 999)
         user_id = f"ANN-{animal}-{number:03d}"
-        found_in_ds = id_exists()
-        if found_in_ds = False
+        found_in_ds = id_exists(supabase,user_id)
+        if found_in_ds == False
             return user_id
         # found_in_annotators = supabase.table("annotators").select("annotator_id").eq("annotator_id", new_id).execute()
         # found_in_annotations = supabase.table("annotations").select("annotator_id").eq("annotator_id", new_id).execute()
@@ -60,21 +61,23 @@ if st.session_state.page == "information_and_consent":
   
   if st.button("Start labeling", disabled= not all_checked):
     st.session_state.page = "login_page"
+    st.rerun()
 
 #Login Page
-if st.session_state.page == "login_page"
-st.title("Login Page")
-user_id = st.text_input(label: "User ID", placeholder = "Please enter your user id here")
-if st.button("Get a user id"):
-  new_id = generate_unique_id()
-  st.write("Your new user id is: {new_id}, Please store it somewhere safely so that you can use it next time.")
-if st.button("Log in"):
-  valid = id_exists()
-  if valid != True :
-    st.write("The user id is invalid, please create a new one")
-  else:
-    st.session_state.page ="choosing_num_sentences"
-    
+if st.session_state.page == "login_page":
+  st.title("Login Page")
+  user_id = st.text_input(label= "User ID", placeholder = "Please enter your user id here")
+  if st.button("Get a user id"):
+    new_id = generate_unique_id(supabase)
+    st.write(f"Your new user id is: {new_id}, Please store it somewhere safely so that you can use it next time.")
+  if st.button("Log in"):
+    valid = id_exists(supabase,user_id)
+    if valid != True :
+      st.write("The user id is invalid, please create a new one")
+    else:
+      st.session_state.page ="choosing_num_sentences"
+      st.rerun()
+      
 
 if st.session_state.page == "choosing_num_sentences":
   num_sentences_choices = [15,25,30,50,75,100]

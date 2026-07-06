@@ -83,11 +83,10 @@ if st.session_state.page == "login_page":
     else:
       st.write("The user id is invalid, please create a new one")
       
-      
-      
-# if st.session_state.page == "choosing_num_sentences":
-#   num_sentences_choices = [15,25,30,50,75,100]
-#   num_sentences_selected = st.selectbox("Please choose the number of sentences you would love to label", num_sentences_choices)
+#Participant choosing number of sentences they would like to label     
+if st.session_state.page == "choosing_num_sentences":
+  num_sentences_choices = [15,25,30,50,75,100]
+  num_sentences_selected = st.selectbox("Please choose the number of sentences you would love to label", num_sentences_choices)
   
 #   sent_length = (supabase.table("sentences").select("sentence", count = "exact", head = True).execute()).count
 #   for i = 0 to num_sentences_selected

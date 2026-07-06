@@ -87,7 +87,12 @@ if st.session_state.page == "login_page":
 if st.session_state.page == "choosing_num_sentences":
   num_sentences_choices = [15,25,30,50,75,100]
   num_sentences_selected = st.selectbox("Please choose the number of sentences you would love to label", num_sentences_choices)
-  
+  sentences = supabase.table("sentences").select("sentence").lt("label_count", 3).execute()
+  eligible_sentences = sentences.data
+  chosen_sentences = random.sample(eligible_sentences,num_sentences_selected)  
+
+
+
 #   sent_length = (supabase.table("sentences").select("sentence", count = "exact", head = True).execute()).count
 #   for i = 0 to num_sentences_selected
 #   st.write("choose the number of sentences you would love to label")

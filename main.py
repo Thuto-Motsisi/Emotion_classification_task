@@ -8,7 +8,7 @@ key = st.secrets["SUPABASE_KEY"]
 supabase = create_client(url,key)
 
 
-def id_exists(supabase) :
+def id_exists(supabase, user_id) :
   """checks if the id exists in the stored data"""
   found_in_annotators = supabase.table("annotators").select("annotator_id").eq("annotator_id", user_id).execute()
   found_in_annotations = supabase.table("annotations").select("annotator_id").eq("annotator_id", user_id).execute()

@@ -26,9 +26,12 @@ def generate_unique_id(supabase):
         animal = random.choice(animals)
         number = random.randint(1, 999)
         user_id = f"ANN-{animal}-{number:03d}"
-        found_in_ds = id_exists(supabase,user_id)
-        if found_in_ds == False:
+        found_in_annotators = supabase.table("annotators").select("annotator_id").eq("annotator_id", user_id).execute()
+        if len(found_in_annotators.data) == 0:
             return user_id
+
+      
+        # found_in_ds = id_exists(supabase,user_id)
         # found_in_annotators = supabase.table("annotators").select("annotator_id").eq("annotator_id", new_id).execute()
         # found_in_annotations = supabase.table("annotations").select("annotator_id").eq("annotator_id", new_id).execute()
 
@@ -73,8 +76,8 @@ if st.session_state.page == "login_page":
     new_id = generate_unique_id(supabase)
     st.write(f"Your new user id is: {new_id}, Please store it somewhere safely so that you can use it next time.")
   if st.button("Log in"):
-    valid = (id_exists(supabase,user_id) or user_id==new_id)
-    if valid==True :
+    found_in_annotators = supabase.table("annotators").select("annotator_id").eq("annotator_id", user_id).execute()
+    if found_in_annotators.data !=0 or user_id==new_id:
       st.session_state.page ="choosing_num_sentences"
       st.rerun()
     else:

@@ -12,7 +12,7 @@ def id_exists(supabase, user_id) :
   """checks if the id exists in the stored data"""
   found_in_annotators = supabase.table("annotators").select("annotator_id").eq("annotator_id", user_id).execute()
   found_in_annotations = supabase.table("annotations").select("annotator_id").eq("annotator_id", user_id).execute()
-  if not len(found_in_annotators.data) == 0 and len(found_in_annotations.data) == 0:
+  if not (len(found_in_annotators.data) == 0 and len(found_in_annotations.data) == 0):
     return True
 
 def generate_unique_id(supabase):

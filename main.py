@@ -24,7 +24,7 @@ def generate_unique_id(supabase):
         number = random.randint(1, 999)
         user_id = f"ANN-{animal}-{number:03d}"
         found_in_ds = id_exists(supabase,user_id)
-        if found_in_ds == False
+        if found_in_ds == False:
             return user_id
         # found_in_annotators = supabase.table("annotators").select("annotator_id").eq("annotator_id", new_id).execute()
         # found_in_annotations = supabase.table("annotations").select("annotator_id").eq("annotator_id", new_id).execute()

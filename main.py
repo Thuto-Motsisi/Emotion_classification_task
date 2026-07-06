@@ -14,6 +14,9 @@ def id_exists(supabase, user_id) :
   found_in_annotations = supabase.table("annotations").select("annotator_id").eq("annotator_id", user_id).execute()
   if not (len(found_in_annotators.data) == 0 and len(found_in_annotations.data) == 0):
     return True
+  else:
+    return False
+
 
 def generate_unique_id(supabase):
     """ Generates unique id for paticipants. conditions: id is not found in the annotations table and the annotators table """

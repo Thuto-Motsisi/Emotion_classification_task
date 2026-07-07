@@ -101,7 +101,7 @@ if st.session_state.page == "choosing_num_sentences":
   eligible_sentences = [item for item in sentences_to_label if item["sentence_id"] not in ids_excluded_to_user]
   eligible_sentence_ids = [item["sentence_id"] for item in eligible_sentences]
   st.write(f"{eligible_sentences}")
-  st.write(f"{eligible_sentence_ids})
+  st.write(f"{eligible_sentence_ids}")
 
 
 

@@ -108,7 +108,7 @@ if st.session_state.page == "choosing_num_sentences":
   st.session_state.page = "showing_sentences"
   st.rerun()
 
-if st.session_state.page =="showing_sentences"
+if st.session_state.page =="showing_sentences":
   st.write("Please label the sentences")
   
 

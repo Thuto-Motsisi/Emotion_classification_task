@@ -104,6 +104,13 @@ if st.session_state.page == "choosing_num_sentences":
   st.write(f"{eligible_sentences}")
   st.write(f"{eligible_sentence_ids}")
   st.write(f"{chosen_ids}")
+  st.session_state.chosen_ids = chosen_ids
+  st.session_state.page = "showing_sentences"
+  st.rerun()
+
+if st.session_state.page =="showing_sentences"
+  st.write("Please label the sentences")
+  
 
 
 

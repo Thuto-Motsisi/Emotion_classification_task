@@ -78,6 +78,7 @@ if st.session_state.page == "login_page":
   if st.button("Log in"):
     found_in_annotators = supabase.table("annotators").select("annotator_id").eq("annotator_id", user_id).execute()
     if found_in_annotators.data !=0 or user_id==new_id:
+      st.session_state.user_id = user_id
       st.session_state.page ="choosing_num_sentences"
       st.rerun()
     else:
@@ -96,8 +97,8 @@ if st.session_state.page == "choosing_num_sentences":
   
   labeled_by_user = supabase.table("annotations").select("sentence_id").eq("annotator_id",user_id).execute()
   labeled_by_user = labeled_by_user.data
-  ids_excluded_to_user = {item["sentence_id"] for item in labeled_by_user}
-  eligible_sentences = {item for item in sentences_to_label if item["sentence_id"] not in ids_excluded_to_user}
+  ids_excluded_to_user = [item["sentence_id"] for item in labeled_by_user]
+  eligible_sentences = [item for item in sentences_to_label if item["sentence_id"] not in ids_excluded_to_user]
   st.write(f"{eligible_sentences[10]}")
 
 

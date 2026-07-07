@@ -95,7 +95,7 @@ if st.session_state.page == "choosing_num_sentences":
   
   # chosen_sentences = random.sample(eligible_sentences,num_sentences_selected) 
   
-  labeled_by_user = supabase.table("annotations").select("sentence_id").eq("annotator_id",user_id).execute()
+  labeled_by_user = supabase.table("annotations").select("sentence_id").eq("annotator_id",st.session_state.user_id).execute()
   labeled_by_user = labeled_by_user.data
   ids_excluded_to_user = [item["sentence_id"] for item in labeled_by_user]
   eligible_sentences = [item for item in sentences_to_label if item["sentence_id"] not in ids_excluded_to_user]

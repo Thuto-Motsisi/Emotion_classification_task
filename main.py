@@ -87,9 +87,18 @@ if st.session_state.page == "login_page":
 if st.session_state.page == "choosing_num_sentences":
   num_sentences_choices = [15,25,30,50,75,100]
   num_sentences_selected = st.selectbox("Please choose the number of sentences you would love to label", num_sentences_choices)
-  sentences = supabase.table("sentences").select("sentence").lt("label_count", 3).execute()
-  eligible_sentences = sentences.data
-  chosen_sentences = random.sample(eligible_sentences,num_sentences_selected)  
+
+  
+  sentences_to_label = supabase.table("sentences").select("sentence_id").lt("label_count", 3).execute()
+  sentences_to_label = sentences_to_label.data
+  
+  chosen_sentences = random.sample(eligible_sentences,num_sentences_selected) 
+  
+  labeled_by_user = supabase.table("annotations").select("sentence_id").eq("annotator_id",user_id).execute()
+  labeled_by_user = labeled_by_user.data
+  ids_excluded to user = {item["sentence_id"] for item in labeled_by_user}
+  eligible_sentences = {item for item in sentences_to_label if item["sentence_id"] not in ids_excluded_to_user}
+  st.write(f"{eligible_sentences[10]}")
 
 
 

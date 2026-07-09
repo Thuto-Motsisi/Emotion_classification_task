@@ -101,16 +101,44 @@ if st.session_state.page == "choosing_num_sentences":
   eligible_sentences = [item for item in sentences_to_label if item["sentence_id"] not in ids_excluded_to_user]
   eligible_sentence_ids = [item["sentence_id"] for item in eligible_sentences]
   chosen_ids = sorted(random.sample(eligible_sentence_ids, num_sentences_selected))
+  emotions = ["Select an emotion", Joy, Anger, Sadness, Fear, Disgust, Neutral, Surprise]
+  confidence_scale = list(range(0,101,5))
+
+  if "user_responses" not in st.session_state:
+    st.session_state.user_responses = {}
   if chosen_ids:
-    response = supabase.table("sentences").select("sentence").in_("sentence_id",chosen_ids).execute()
-    sentences = [row["sentence"] for row in response.data]
-  else:
-    sentences= []
+    response = supabase.table("sentences").select("sentence_id", "sentence").in_("sentence_id",chosen_ids).execute()
+    for row in response.data:
+      s_id = row["sentence_id"]
+      s_text = row["sentence"]
+      st.write(f"{s_text}")
+      chosen_emotion = st.selectbox("Select the emotion", options = emotions, key = f"Emotion_for_{s_id}")
+      if chosen_emotion != "Select an emotion":
+        if s_id not in st.session_state.user_responses:
+          st.session_state.user_responses[s_id] = {}
+        st.session_state.user_responses[s_id]["emotion"] = chosen_emotion
+        chosen_confidence = st.selectbox("Select how confident you are", options = confidence_scale, index=0, key = f"Emotion_for_{s_id}")
+        st.session_state.user_responses[s_id]["confidence"] = chosen_confidence
+      else: 
+        st.session_state.user_responses.pop(s_id, None)
+    st.divider()
+
+
+
+    
+  #   sentences = [row["sentence"] for row in response.data]
+  # else:
+  #   sentences= []
+  
+  # chosen_
+
+
+
   
   # st.write(f"{eligible_sentences}")
   # st.write(f"{eligible_sentence_ids}")
-  st.write(f"{chosen_ids}")
-  st.write(f"{sentences}")
+  # st.write(f"{chosen_ids}")
+  # st.write(f"{sentences}")
   # st.session_state.chosen_ids = chosen_ids
   # st.session_state.page = "showing_sentences"
   # st.rerun()

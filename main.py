@@ -101,12 +101,17 @@ if st.session_state.page == "choosing_num_sentences":
   eligible_sentences = [item for item in sentences_to_label if item["sentence_id"] not in ids_excluded_to_user]
   eligible_sentence_ids = [item["sentence_id"] for item in eligible_sentences]
   chosen_ids = random.sample(eligible_sentence_ids, num_sentences_selected)
-
+  if chosen_ids:
+    response = supabase.table("sentences").select("sentence").in_("sentence_id",chosen_ids).execute()
+    sentences = [row["sentence"] for row in response.data]
+  else:
+    sentences= []
   
-  st.write(f"{eligible_sentences}")
-  st.write(f"{eligible_sentence_ids}")
+  # st.write(f"{eligible_sentences}")
+  # st.write(f"{eligible_sentence_ids}")
   st.write(f"{chosen_ids}")
-  st.session_state.chosen_ids = chosen_ids
+  st.write(f"{sentences}")
+  # st.session_state.chosen_ids = chosen_ids
   # st.session_state.page = "showing_sentences"
   # st.rerun()
 

@@ -124,6 +124,8 @@ if st.session_state.page == "choosing_num_sentences":
       else: 
         st.session_state.user_responses.pop(s_id, None)
     st.divider()
+    st.write(st.session_state.user_id)
+    st.write(st.session_state.chosen_ids)
     st.write(st.session_state.user_responses)
 
 

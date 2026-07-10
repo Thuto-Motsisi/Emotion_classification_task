@@ -119,7 +119,7 @@ if st.session_state.page == "choosing_num_sentences":
         if s_id not in st.session_state.user_responses:
           st.session_state.user_responses[s_id] = {}
         st.session_state.user_responses[s_id]["emotion"] = chosen_emotion
-        chosen_confidence = st.selectbox("Select how confident you are", options = confidence_scale, index=0, key = f"Emotion_for_{s_id}")
+        chosen_confidence = st.selectbox("Select how confident you are", options = confidence_scale, index=0, key = f"confidence_for_{s_id}")
         st.session_state.user_responses[s_id]["confidence"] = chosen_confidence
       else: 
         st.session_state.user_responses.pop(s_id, None)

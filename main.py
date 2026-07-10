@@ -93,7 +93,7 @@ if st.session_state.page == "choosing_num_sentences":
   sentences_to_label = supabase.table("sentences").select("sentence_id").lt("label_count", 3).execute()
   sentences_to_label = sentences_to_label.data
   
-  # chosen_sentences = random.sample(eligible_sentences,num_sentences_selected) 
+ 
   
   labeled_by_user = supabase.table("annotations").select("sentence_id").eq("annotator_id",st.session_state.user_id).execute()
   labeled_by_user = labeled_by_user.data
@@ -124,7 +124,7 @@ if st.session_state.page == "choosing_num_sentences":
       else: 
         st.session_state.user_responses.pop(s_id, None)
     st.divider()
-
+    st.write(st.session_state.user_responses)
 
 
     

@@ -129,7 +129,7 @@ if st.button("Submit"):
   supabase.table("annotators").insert({"annotator_id": st.session_state.user_id})
 
   for s_id, response in st.session_state.user_responses.items():
-    supabase.table("annotations").insert({"annotator_id": st.session_state.user_id, "sentence_id": s_id, "emotion_label":responses["emotion"], "confidence_score": responses["confidence"]})
+    supabase.table("annotations").insert({"annotator_id": st.session_state.user_id, "sentence_id": s_id, "emotion_label":response["emotion"], "confidence_score": response["confidence"]})
   
     st.write(st.session_state.user_id)
     st.write(st.session_state.chosen_ids)

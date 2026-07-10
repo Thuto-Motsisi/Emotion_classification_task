@@ -37,6 +37,21 @@ def generate_unique_id(supabase):
 
         # if len(found_in_annotators.data) == 0 and len(found_in_annotations.data) == 0:
         #     return new_id
+def add_user_to_table(supabase, user_id):
+  check_id = id_exists(supabase, user_id)
+  if check_id == True:
+    pass
+  else:
+    supabase.table("annotators").insert({"annotator_id": user_id}).execute()
+ 
+
+def record_annotation(supabase,user_responses):
+   for s_id, response in user_responses.items():
+    supabase.table("annotations").insert({"annotator_id": st.session_state.user_id, "sentence_id": s_id, "emotion_label":response["emotion"], "confidence_score": response["confidence"]}).execute()
+    current = supabase.table("sentences").select("label_count").eq("sentence_id", s_id).execute()
+    current_count = current.data[0]["label_count"]
+    supabase.table("sentences").update({"label_count" : current_count+1}).eq("sentence_id", s_id).execute()
+
 
 
 if "page" not in st.session_state:
@@ -125,12 +140,20 @@ if st.session_state.page == "choosing_num_sentences":
         st.session_state.user_responses.pop(s_id, None)
     st.divider()
 
-if st.button("Submit"):
-  supabase.table("annotators").insert({"annotator_id": st.session_state.user_id}).execute()
-
-  for s_id, response in st.session_state.user_responses.items():
-    supabase.table("annotations").insert({"annotator_id": st.session_state.user_id, "sentence_id": s_id, "emotion_label":response["emotion"], "confidence_score": response["confidence"]}).execute()
+# if st.button("Submit"):
+#   add_user_to_table(supabase, st.session_state.user_id)
+#   record_annotation(supabase,st.session_state.user_responses)
   
+    if st.button("Submit"):
+        try:
+            add_user_to_table(supabase, st.session_state.user_id)
+            record_annotation(supabase, st.session_state.user_responses)
+            st.success("Submitted successfully!")
+        except Exception as e:
+            st.error(f"Something went wrong: {e}")
+ 
+
+
     st.write(st.session_state.user_id)
     st.write(st.session_state.chosen_ids)
     st.write(st.session_state.user_responses)

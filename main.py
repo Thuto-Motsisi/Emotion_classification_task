@@ -109,7 +109,7 @@ if st.session_state.page == "choosing_num_sentences":
     st.session_state.user_responses = {}
     
   if st.session_state.chosen_ids:
-    response = supabase.table("sentences").select("sentence_id", "sentence").in_("sentence_id",chosen_ids).execute()
+    response = supabase.table("sentences").select("sentence_id", "sentence").in_("sentence_id",st.session_state.chosen_ids).execute()
     for row in response.data:
       s_id = row["sentence_id"]
       s_text = row["sentence"]

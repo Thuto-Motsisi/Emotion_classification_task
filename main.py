@@ -52,7 +52,7 @@ def record_annotation(supabase,user_responses):
     current_count = current.data[0]["label_count"]
     new_count = current_count +1
     supabase.table("sentences").update({"label_count" : new_count}).eq("sentence_id", s_id).execute()
-    labeled_sentences = supabase.table(labeled_sentences).select("sentence_id").eq("sentence_id", s_id).execute()
+    labeled_sentences = supabase.table("labeled_sentences").select("sentence_id").eq("sentence_id", s_id).execute()
     if len(labeled_sentences.data) ==0:
       supabase.table("labeled_sentences").insert({"sentence_id":s_id,f"label_{new_count}": response["emotion"], f"confidence_{new_count}": response["confidence"]}).execute()
     else:

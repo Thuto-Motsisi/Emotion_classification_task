@@ -30,13 +30,6 @@ def generate_unique_id(supabase):
         if len(found_in_annotators.data) == 0:
             return user_id
 
-      
-        # found_in_ds = id_exists(supabase,user_id)
-        # found_in_annotators = supabase.table("annotators").select("annotator_id").eq("annotator_id", new_id).execute()
-        # found_in_annotations = supabase.table("annotations").select("annotator_id").eq("annotator_id", new_id).execute()
-
-        # if len(found_in_annotators.data) == 0 and len(found_in_annotations.data) == 0:
-        #     return new_id
 def add_user_to_table(supabase, user_id):
   check_id = id_exists(supabase, user_id)
   if check_id == True:
@@ -58,12 +51,8 @@ def record_annotation(supabase,user_responses):
     else:
       supabase.table("labeled_sentences").update({f"label_{new_count}":response["emotion"], f"confidence_{new_count}":response["confidence"]}).eq("sentence_id", s_id).execute()
 
-
-
-if "page" not in st.session_state:
-  st.session_state.page ="information_and_consent"
-
-if st.session_state.page == "information_and_consent":   
+def english_information_consent():
+  if st.session_state.page == "information_and_consent":   
   st.title("Evaluating Pseudo-labeling for Setswana Emotion Classification")
   st.subheader("Information about the study")
   st.write("give info...(detailed)")
@@ -88,6 +77,15 @@ if st.session_state.page == "information_and_consent":
   if st.button("Start labeling", disabled= not all_checked):
     st.session_state.page = "login_page"
     st.rerun()
+
+  
+
+
+
+
+if "page" not in st.session_state:
+  st.session_state.page ="information_and_consent"
+
 
 #Login Page
 if st.session_state.page == "login_page":
@@ -146,10 +144,6 @@ if st.session_state.page == "choosing_num_sentences":
         st.session_state.user_responses.pop(s_id, None)
     st.divider()
 
-# if st.button("Submit"):
-#   add_user_to_table(supabase, st.session_state.user_id)
-#   record_annotation(supabase,st.session_state.user_responses)
-  
     if st.button("Submit"):
         try:
             add_user_to_table(supabase, st.session_state.user_id)
@@ -157,12 +151,14 @@ if st.session_state.page == "choosing_num_sentences":
             st.success("Submitted successfully!")
         except Exception as e:
             st.error(f"Something went wrong: {e}")
- 
+       st.session_state.page = "End Page"
+    
+if st.session_state.page == "End Page"
+st.write("Thank you for participating, please share the link to this labeling task with other Tswana people you know.")
 
-
-    st.write(st.session_state.user_id)
-    st.write(st.session_state.chosen_ids)
-    st.write(st.session_state.user_responses)
+    # st.write(st.session_state.user_id)
+    # st.write(st.session_state.chosen_ids)
+    # st.write(st.session_state.user_responses)
 
 
     

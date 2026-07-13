@@ -52,7 +52,7 @@ def record_annotation(supabase,user_responses):
       supabase.table("labeled_sentences").update({f"label_{new_count}":response["emotion"], f"confidence_{new_count}":response["confidence"]}).eq("sentence_id", s_id).execute()
 
 def english_information_consent():
-  if st.session_state.page == "information_and_consent":   
+  if st.session_state.page == "english_information_and_consent":   
   st.title("Evaluating Pseudo-labeling for Setswana Emotion Classification")
   st.subheader("Information about the study")
   st.write("give info...(detailed)")
@@ -77,7 +77,7 @@ def english_information_consent():
     st.rerun()
 
 def setswana_information_consent():
-  if st.session_state.page == "information_and_consent":   
+  if st.session_state.page == "setswana_information_and_consent":   
   st.title("Evaluating Pseudo-labeling for Setswana Emotion Classification")
   st.subheader("Information about the study")
   st.write("give info...(detailed)")
@@ -107,7 +107,17 @@ def setswana_information_consent():
 
 
 if "page" not in st.session_state:
-  st.session_state.page ="information_and_consent"
+  st.session_state.page ="Welcome_page"
+if st.session_state.page =="Welcome_page"
+  st.Write("Welcome to the Setswana Emotion labeling task, your contibution is highly appreciated." )
+  st.Write("Please choose the language you are most comfortable with:" )
+  if st.button("English"):
+    st.session_state.page = "english_information_and_consent"
+    english_information_consent
+  if st.button("Setswana"):
+    st.session_state.page = "setswana_information_and_consent"
+    setswana_information_consent
+  
 
 
 #Login Page

@@ -19,7 +19,7 @@ def id_exists(supabase, user_id) :
 
 
 def generate_unique_id(supabase):
-    """ Generates unique id for paticipants. conditions: id is not found in the annotations table and the annotators table """
+    """ Generates unique id for paticipants. conditions: id is not found in the annotators table """
     
     animals = ["CAT", "DOG", "OWL", "FOX", "RAM", "HEN", "COW"]
     while True:
@@ -52,6 +52,7 @@ def record_annotation(supabase,user_responses):
       supabase.table("labeled_sentences").update({f"label_{new_count}":response["emotion"], f"confidence_{new_count}":response["confidence"]}).eq("sentence_id", s_id).execute()
 
 def english_information_consent():
+  """Information page and consent in English"""
   if st.session_state.page == "english_information_and_consent":   
     st.title("Evaluating Pseudo-labeling for Setswana Emotion Classification")
     st.subheader("Information about the study")
@@ -77,6 +78,7 @@ def english_information_consent():
       st.rerun()
 
 def setswana_information_consent():
+  """Information page and consent in Setswana"""
   if st.session_state.page == "setswana_information_and_consent":   
     st.title("Evaluating Pseudo-labeling for Setswana Emotion Classification")
     st.subheader("Information about the study")
@@ -105,7 +107,7 @@ def setswana_information_consent():
 
 
 
-
+#first page the participant sees. This is where they choose which language they are comfortable participating in.
 if "page" not in st.session_state:
   st.session_state.page ="Welcome_page"
 if st.session_state.page =="Welcome_page":
@@ -122,7 +124,8 @@ setswana_information_consent()
   
 
 
-#Login Page
+#Login Page. The user inserts their user_id / create a new id. 
+#Also checking that the user_id they have filled in exists in the annotators table
 if st.session_state.page == "login_page":
   st.title("Login Page")
   user_id = st.text_input(label= "User ID", placeholder = "Please enter your user id here")
@@ -146,6 +149,8 @@ if st.session_state.page == "choosing_num_sentences":
     st.session_state.page = "labeling_sentences"
     st.rerun()
 
+#Assigning sentences to the user to label
+#check which sentences the user has already labeled and making sure that they dont get the same sentence again.
 if st.session_state.page == "labeling_sentences":
   sentences_to_label = supabase.table("sentences").select("sentence_id").lt("label_count", 3).execute()
   sentences_to_label = sentences_to_label.data
@@ -157,11 +162,14 @@ if st.session_state.page == "labeling_sentences":
   # chosen_ids = sorted(random.sample(eligible_sentence_ids, st.session_state.num_sentences_selected))
   emotions = ["Select an emotion", "Joy", "Anger", "Sadness", "Fear", "Disgust", "Neutral", "Surprise"]
   confidence_scale = list(range(0,101,5))
+  
+  #choosing sentences for the user to label (from the eligible sentences, choosing the number they selected)
   if "chosen_ids" not in st.session_state:
     st.session_state.chosen_ids = sorted(random.sample(eligible_sentence_ids, st.session_state.num_sentences_selected))
   if "user_responses" not in st.session_state:
     st.session_state.user_responses = {}
-    
+
+  #storing their their responses
   if st.session_state.chosen_ids:
     response = supabase.table("sentences").select("sentence_id", "sentence").in_("sentence_id",st.session_state.chosen_ids).execute()
     for row in response.data:
@@ -179,6 +187,7 @@ if st.session_state.page == "labeling_sentences":
         st.session_state.user_responses.pop(s_id, None)
     st.divider()
 
+    #saving their responses to the tables on supabase
     if st.button("Submit"):
         try:
             add_user_to_table(supabase, st.session_state.user_id)
@@ -187,6 +196,7 @@ if st.session_state.page == "labeling_sentences":
         except Exception as e:
             st.error(f"Something went wrong: {e}")
         st.session_state.page = "End Page"
+        st.rerun()
     
 if st.session_state.page == "End Page":
   st.write("Thank you for participating, please share the link to this labeling task with other Tswana people you know.")

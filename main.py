@@ -108,7 +108,7 @@ def setswana_information_consent():
 
 if "page" not in st.session_state:
   st.session_state.page ="Welcome_page"
-if st.session_state.page =="Welcome_page"
+if st.session_state.page =="Welcome_page":
   st.Write("Welcome to the Setswana Emotion labeling task, your contibution is highly appreciated." )
   st.Write("Please choose the language you are most comfortable with:" )
   if st.button("English"):

@@ -113,10 +113,12 @@ if st.session_state.page =="Welcome_page":
   st.write("Please choose the language you are most comfortable with:" )
   if st.button("English"):
     st.session_state.page = "english_information_and_consent"
-    english_information_consent()
+    st.rerun()
   if st.button("Setswana"):
     st.session_state.page = "setswana_information_and_consent"
-    setswana_information_consent()
+    st.rerun()
+english_information_consent()
+setswana_information_consent()
   
 
 

@@ -142,13 +142,13 @@ if st.session_state.page == "login_page":
 if st.session_state.page == "choosing_num_sentences":
   num_sentences_choices = [15,25,30,50,75,100]
   st.session_state.num_sentences_selected = st.selectbox("Please choose the number of sentences you would love to label", num_sentences_choices)
+  if st.button("Start"):
+    st.session_state.page = "labeling_sentences"
+    st.rerun()
 
-  
+if st.session_state.page == "labeling_sentences"
   sentences_to_label = supabase.table("sentences").select("sentence_id").lt("label_count", 3).execute()
   sentences_to_label = sentences_to_label.data
-  
- 
-  
   labeled_by_user = supabase.table("annotations").select("sentence_id").eq("annotator_id",st.session_state.user_id).execute()
   labeled_by_user = labeled_by_user.data
   ids_excluded_to_user = [item["sentence_id"] for item in labeled_by_user]

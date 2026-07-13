@@ -184,10 +184,10 @@ if st.session_state.page == "choosing_num_sentences":
             st.success("Submitted successfully!")
         except Exception as e:
             st.error(f"Something went wrong: {e}")
-       st.session_state.page = "End Page"
+        st.session_state.page = "End Page"
     
-if st.session_state.page == "End Page"
-st.write("Thank you for participating, please share the link to this labeling task with other Tswana people you know.")
+if st.session_state.page == "End Page":
+  st.write("Thank you for participating, please share the link to this labeling task with other Tswana people you know.")
 
     # st.write(st.session_state.user_id)
     # st.write(st.session_state.chosen_ids)

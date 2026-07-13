@@ -192,14 +192,13 @@ if st.session_state.page == "labeling_sentences":
         try:
             add_user_to_table(supabase, st.session_state.user_id)
             record_annotation(supabase, st.session_state.user_responses)
-            st.success("Submitted successfully!")
         except Exception as e:
             st.error(f"Something went wrong: {e}")
         st.session_state.page = "End Page"
         st.rerun()
     
 if st.session_state.page == "End Page":
-  st.write("Thank you for participating, please share the link to this labeling task with other Tswana people you know.")
+  st.success("Thank you for participating, please share the link to this labeling task with other Tswana people you know.")
 
     # st.write(st.session_state.user_id)
     # st.write(st.session_state.chosen_ids)

@@ -146,7 +146,7 @@ if st.session_state.page == "choosing_num_sentences":
     st.session_state.page = "labeling_sentences"
     st.rerun()
 
-if st.session_state.page == "labeling_sentences"
+if st.session_state.page == "labeling_sentences":
   sentences_to_label = supabase.table("sentences").select("sentence_id").lt("label_count", 3).execute()
   sentences_to_label = sentences_to_label.data
   labeled_by_user = supabase.table("annotations").select("sentence_id").eq("annotator_id",st.session_state.user_id).execute()

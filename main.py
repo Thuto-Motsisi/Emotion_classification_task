@@ -60,21 +60,44 @@ def english_information_consent():
   
   st.subheader("Consent")
   consent_statements = [
-    "I have read and understood the information sheet.",
-    "I understand that my participation in voluntary, I can skip any sentence I find uncomfortable and I can stop at any time without penalty.",
-    "I understand that no personally identifiable information about me will be collected.",
+    "The research study was explained to me. I understand what this study is about." ,
+    "I understand that my participation is voluntary, I can skip any sentences I don’t want to label, and I can stop at any time without penalty.",
     "I confirm that I am a native Setswana speaker between the ages of 18 and 65.",
-    "I consent to the emotion labels and confidence scores I provide to be included in an anonymized dataset and to be released after completion of the researchers MSc study, and no later than 3 years after the data has been collected.",
-    "I consent to participate in this research study."
+    "I agree that my participation will remain anonymous, my name or other identifying data will not be collected and used by the researcher in their research report.",
+    "I agree to the emotion labels and confidence scores I provide to be included in an anonymized dataset and to be released publicly after completion of the researchers MSc study, and no later than 3 years after the data is collected. ",
+    "I agree that other researchers may use the information I provide in the sentence emotion labeling activity, but my name and any personal information will not be used or passed on."
   ]
-  
   all_checked = True
   for item in consent_statements:
     checked = st.checkbox(item)
     if not checked:
       all_checked = False
-  
   if st.button("Start labeling", disabled= not all_checked):
+    st.session_state.page = "login_page"
+    st.rerun()
+
+def setswana_information_consent():
+  if st.session_state.page == "information_and_consent":   
+  st.title("Evaluating Pseudo-labeling for Setswana Emotion Classification")
+  st.subheader("Information about the study")
+  st.write("give info...(detailed)")
+  st.markdown("---")
+  
+  st.subheader("Consent")
+  consent_statements = [
+   "Ke tlhaloseditswe ka patlisiso e. Ke tlhaloganya se thuto eno e leng ka sone.",
+    "Ke a tlhaloganya gore go nna le seabe ga me ke boithaopo, nka kgona go tlogela dipolelo dipe fela tse ke sa batleng go di tshwaya, mme nka kgona go emisa nako nngwe le nngwe ntle le go otlhaiwa.",
+    "Ke a netefatsa gore ke mmueledi wa Setswana wa dingwaga tse di fa gare ga 18 le 65. ",
+    "Ke dumela gore go nna le seabe go tla nna go sa itsiwe, leina la me kgotsa tshedimosetso e nngwe e e supang gore ke mang ga e kitla e kokoanngwa e be e dirisiwa ke mmatlisisi mo pegong ya gagwe ya dipatlisiso.", 
+    "Ke dumela gore matshwao a maikutlo le dipalo tsa tshepo tse ke di neelang di tsenngwe mo setlhopong sa tshedimosetso se se sa itsiweng gore ke mang, mme di gololwe mo setšhabeng morago ga thuto ya MSc ya mmatlisisi, mme e seng morago ga dingwanga tse tharo fa go sena go kokoanngwa tshedimosetso. ",
+    "Ke dumela  gore babatlisisi ba bangwe ba ka dirisa tshedimosetso e ke e neelang mo tirong ya go kwala maikutlo a polelo, mme leina la me le tshedimosetso epe fela ya me ga e kitla e dirisiwa kgotsa e fetisiwa."
+  ]
+  all_checked = True
+  for item in consent_statements:
+    checked = st.checkbox(item)
+    if not checked:
+      all_checked = False
+  if st.button("Simolola go tshwaya", disabled= not all_checked):
     st.session_state.page = "login_page"
     st.rerun()
 

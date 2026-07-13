@@ -141,7 +141,7 @@ if st.session_state.page == "login_page":
 #Participant choosing number of sentences they would like to label     
 if st.session_state.page == "choosing_num_sentences":
   num_sentences_choices = [15,25,30,50,75,100]
-  num_sentences_selected = st.selectbox("Please choose the number of sentences you would love to label", num_sentences_choices)
+  st.session_state.num_sentences_selected = st.selectbox("Please choose the number of sentences you would love to label", num_sentences_choices)
 
   
   sentences_to_label = supabase.table("sentences").select("sentence_id").lt("label_count", 3).execute()
@@ -154,11 +154,11 @@ if st.session_state.page == "choosing_num_sentences":
   ids_excluded_to_user = [item["sentence_id"] for item in labeled_by_user]
   eligible_sentences = [item for item in sentences_to_label if item["sentence_id"] not in ids_excluded_to_user]
   eligible_sentence_ids = [item["sentence_id"] for item in eligible_sentences]
-  # chosen_ids = sorted(random.sample(eligible_sentence_ids, num_sentences_selected))
+  # chosen_ids = sorted(random.sample(eligible_sentence_ids, st.session_state.num_sentences_selected))
   emotions = ["Select an emotion", "Joy", "Anger", "Sadness", "Fear", "Disgust", "Neutral", "Surprise"]
   confidence_scale = list(range(0,101,5))
   if "chosen_ids" not in st.session_state:
-    st.session_state.chosen_ids = sorted(random.sample(eligible_sentence_ids, num_sentences_selected))
+    st.session_state.chosen_ids = sorted(random.sample(eligible_sentence_ids, st.session_state.num_sentences_selected))
   if "user_responses" not in st.session_state:
     st.session_state.user_responses = {}
     

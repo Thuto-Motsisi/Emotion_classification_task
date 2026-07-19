@@ -195,51 +195,52 @@ if st.session_state.page == "labeling_sentences":
   sentences_to_label = sentences_to_label.data
   labeled_by_user = supabase.table("annotations").select("sentence_id").eq("annotator_id",st.session_state.user_id).execute()
   labeled_by_user = labeled_by_user.data
-  ids_excluded_to_user = [item["sentence_id"] for item in labeled_by_user]
-  eligible_sentences = [item for item in sentences_to_label if item["sentence_id"] not in ids_excluded_to_user]
+  excluded_ids = {item["sentence_id"] for item in labeled_by_user}
+  eligible_sentences = [item for item in sentences_to_label if item["sentence_id"] not in excluded_ids]
   eligible_sentence_ids = [item["sentence_id"] for item in eligible_sentences]
-  # chosen_ids = sorted(random.sample(eligible_sentence_ids, st.session_state.num_sentences_selected))
+  print(exluded_ids)
+  print(eligible_sentence_ids)
 
   
-  emotions = ["Select an emotion", "Joy", "Anger", "Sadness", "Fear", "Disgust", "Neutral", "Surprise"]
-  confidence_scale = list(range(0,101,5))
+#   emotions = ["Select an emotion", "Joy", "Anger", "Sadness", "Fear", "Disgust", "Neutral", "Surprise"]
+#   confidence_scale = list(range(0,101,5))
   
-  #choosing sentences for the user to label (from the eligible sentences, choosing the number they selected)
-  if "chosen_ids" not in st.session_state:
-    st.session_state.chosen_ids = sorted(random.sample(eligible_sentence_ids, st.session_state.num_sentences_selected))
-  if "user_responses" not in st.session_state:
-    st.session_state.user_responses = {}
+#   #choosing sentences for the user to label (from the eligible sentences, choosing the number they selected)
+#   if "chosen_ids" not in st.session_state:
+#     st.session_state.chosen_ids = sorted(random.sample(eligible_sentence_ids, st.session_state.num_sentences_selected))
+#   if "user_responses" not in st.session_state:
+#     st.session_state.user_responses = {}
 
-  #storing their their responses
-  if st.session_state.chosen_ids:
-    response = supabase.table("sentences").select("sentence_id", "sentence").in_("sentence_id",st.session_state.chosen_ids).execute()
-    for row in response.data:
-      s_id = row["sentence_id"]
-      s_text = row["sentence"]
-      st.write(f"{s_text}")
-      chosen_emotion = st.selectbox("Select the emotion", options = emotions, key = f"Emotion_for_{s_id}")
-      if chosen_emotion != "Select an emotion":
-        if s_id not in st.session_state.user_responses:
-          st.session_state.user_responses[s_id] = {}
-        st.session_state.user_responses[s_id]["emotion"] = chosen_emotion
-        chosen_confidence = st.selectbox("Select how confident you are", options = confidence_scale, index=0, key = f"confidence_for_{s_id}")
-        st.session_state.user_responses[s_id]["confidence"] = chosen_confidence
-      else: 
-        st.session_state.user_responses.pop(s_id, None)
-    st.divider()
+#   #storing their their responses
+#   if st.session_state.chosen_ids:
+#     response = supabase.table("sentences").select("sentence_id", "sentence").in_("sentence_id",st.session_state.chosen_ids).execute()
+#     for row in response.data:
+#       s_id = row["sentence_id"]
+#       s_text = row["sentence"]
+#       st.write(f"{s_text}")
+#       chosen_emotion = st.selectbox("Select the emotion", options = emotions, key = f"Emotion_for_{s_id}")
+#       if chosen_emotion != "Select an emotion":
+#         if s_id not in st.session_state.user_responses:
+#           st.session_state.user_responses[s_id] = {}
+#         st.session_state.user_responses[s_id]["emotion"] = chosen_emotion
+#         chosen_confidence = st.selectbox("Select how confident you are", options = confidence_scale, index=0, key = f"confidence_for_{s_id}")
+#         st.session_state.user_responses[s_id]["confidence"] = chosen_confidence
+#       else: 
+#         st.session_state.user_responses.pop(s_id, None)
+#     st.divider()
 
-    #saving their responses to the tables on supabase
-    if st.button("Submit"):
-        try:
-            add_user_to_table(supabase, st.session_state.user_id)
-            record_annotation(supabase, st.session_state.user_responses)
-        except Exception as e:
-            st.error(f"Something went wrong: {e}")
-        st.session_state.page = "End Page"
-        st.rerun()
+#     #saving their responses to the tables on supabase
+#     if st.button("Submit"):
+#         try:
+#             add_user_to_table(supabase, st.session_state.user_id)
+#             record_annotation(supabase, st.session_state.user_responses)
+#         except Exception as e:
+#             st.error(f"Something went wrong: {e}")
+#         st.session_state.page = "End Page"
+#         st.rerun()
     
-if st.session_state.page == "End Page":
-  st.success("Thank you for participating, please share the link to this labeling task with other Tswana people you know.")
+# if st.session_state.page == "End Page":
+#   st.success("Thank you for participating, please share the link to this labeling task with other Tswana people you know.")
 
     # st.write(st.session_state.user_id)
     # st.write(st.session_state.chosen_ids)

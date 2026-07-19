@@ -112,7 +112,7 @@ def english_login_page():
     user_id = st.text_input(label= "User ID", placeholder = "Please enter your user id here")
     if st.button("Get a user id"):
       st.session_state.new_id = generate_unique_id(supabase)
-    if "new_id" in session_state:
+    if "new_id" in st.session_state:
       st.write(f"Your new user id is: {new_id}, Please store it somewhere safely so that you can use it next time.")
     if st.button("Log in"):
       entered_id = user_id.strip()
@@ -133,7 +133,7 @@ def setswana_login_page():
     user_id = st.text_input(label= "Letshwao la boitshupo", placeholder = "Ka kopo, tsenya nomoro ya gago ya boitshupo fano")
     if st.button("Kopa letshwao la boitshupo"):
       st.session_state.new_id = generate_unique_id(supabase)
-    if "new_id" in session_state:
+    if "new_id" in st.session_state:
       st.write(f"Letshwao la gago la palo ya boitshupo ke: {new_id}, Kopa o le boloke mo lefelong le e babalesegileng gore o kgone go le dirisa mo nakong e e tlang.")
     if st.button("Tsena"):
       entered_id = user_id.strip()

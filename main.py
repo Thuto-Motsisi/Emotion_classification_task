@@ -187,7 +187,7 @@ def english_labeling_sentences():
         s_id = row["sentence_id"]
         s_text = row["sentence"]
 
-        col_sentence, col_emotion, col_confidence = st.columns([60,25,15])
+        col_sentence, col_emotion, col_confidence = st.columns([60,20,20])
 
         with col_sentence:
           st.write(f"{idx}. {s_text}")

@@ -198,7 +198,7 @@ def english_labeling_sentences():
         if emotion_chosen:
           st.session_state.user_responses.setdefault(s_id, {})
           st.session_state.user_responses[s_id]["emotion"] = chosen_emotion
-          if chosen_confidence != confidence_placeholder
+          if chosen_confidence != confidence_placeholder:
             st.session_state.user_responses[s_id]["confidence"] = chosen_confidence
           else:
             st.warning(f"Please set a confidence score for sentence {idx}. If you don't, it will be assumed to be 0.")

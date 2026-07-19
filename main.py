@@ -190,7 +190,7 @@ def english_labeling_sentences():
         with col_sentence:
           st.write(f"{idx}. {s_text}")
         with col_label_inputs:   
-        chosen_emotion = st.selectbox("Select emotion", options = emotions, key = f"Emotion_for_{s_id}")
+          chosen_emotion = st.selectbox("Select emotion", options = emotions, key = f"Emotion_for_{s_id}")
         if chosen_emotion != "Select an emotion":
           if s_id not in st.session_state.user_responses:
             st.session_state.user_responses[s_id] = {}

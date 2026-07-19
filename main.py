@@ -187,13 +187,14 @@ def english_labeling_sentences():
         s_id = row["sentence_id"]
         s_text = row["sentence"]
 
-        col_sentence, col_label_inputs = st.columns([3,2])
+        col_sentence, col_emotion, col_confidence = st.columns([60,25,15])
 
         with col_sentence:
           st.write(f"{idx}. {s_text}")
-        with col_label_inputs:   
+        with col_emotion:   
           chosen_emotion = st.selectbox("Select emotion", options = emotions, key = f"Emotion_for_{s_id}")
           emotion_chosen = chosen_emotion != "Select emotion"
+        with col_confidence:
           chosen_confidence = st.selectbox("Select how confident you are", options = confidence, index = 0, key = f"confidence_for_{s_id}", disabled = not emotion_chosen)
         if emotion_chosen:
           st.session_state.user_responses.setdefault(s_id, {})

@@ -111,32 +111,43 @@ def english_login_page():
     st.title("Login Page")
     user_id = st.text_input(label= "User ID", placeholder = "Please enter your user id here")
     if st.button("Get a user id"):
-      new_id = generate_unique_id(supabase)
+      st.session_state.new_id = generate_unique_id(supabase)
+    if "new_id" in session_state:
       st.write(f"Your new user id is: {new_id}, Please store it somewhere safely so that you can use it next time.")
     if st.button("Log in"):
-      found_in_annotators = supabase.table("annotators").select("annotator_id").eq("annotator_id", user_id).execute()
-      if found_in_annotators.data !=0 or user_id==new_id:
-        st.session_state.user_id = user_id
+      entered_id = user_id.strip()
+      new_id = st.session_state.get("new_id")
+      found_in_annotators = supabase.table("annotators").select("annotator_id").eq("annotator_id", entered_id).execute()
+      id_is_valid = len(found_in_annotators.data) > 0 or (new_id is not None and entered_id == new_id)
+      if entered_id and id_is_valid :
+        st.session_state.user_id = entered_id
         st.session_state.page ="english_choosing_num_sentences"
         st.rerun()
       else:
         st.write("The user id is invalid, please get a new one")
 
+
 def setswana_login_page(): 
   if st.session_state.page == "setswana_login_page":
     st.title("Lefelo la go ikitsise")
-    user_id = st.text_input(label= "Letshwao la palo", placeholder = "Ka kopo, tsenya nomoro ya gago ya boitshupo fano")
+    user_id = st.text_input(label= "Letshwao la boitshupo", placeholder = "Ka kopo, tsenya nomoro ya gago ya boitshupo fano")
     if st.button("Kopa letshwao la boitshupo"):
-      new_id = generate_unique_id(supabase)
+      st.session_state.new_id = generate_unique_id(supabase)
+    if "new_id" in session_state:
       st.write(f"Letshwao la gago la palo ya boitshupo ke: {new_id}, Kopa o le boloke mo lefelong le e babalesegileng gore o kgone go le dirisa mo nakong e e tlang.")
     if st.button("Tsena"):
-      found_in_annotators = supabase.table("annotators").select("annotator_id").eq("annotator_id", user_id).execute()
-      if found_in_annotators.data !=0 or user_id==new_id:
-        st.session_state.user_id = user_id
+      entered_id = user_id.strip()
+      new_id = st.session_state.get("new_id")
+      found_in_annotators = supabase.table("annotators").select("annotator_id").eq("annotator_id", entered_id).execute()
+      id_is_valid = len(found_in_annotators.data) > 0 or (new_id is not None and entered_id == new_id)
+      if entered_id and id_is_valid :
+        st.session_state.user_id = entered_id
         st.session_state.page ="setswana_choosing_num_sentences"
         st.rerun()
       else:
         st.write("Letshwao la boitshupo ga le a nepagala, ka kopo kopa le lesha")
+
+
       
 #Participant choosing number of sentences they would like to label  
 def english_choosing_num_sentences():

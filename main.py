@@ -203,9 +203,9 @@ def english_labeling_sentences():
           else:
             st.warning(f"Please set a confidence score for sentence {idx}. If you don't, it will be assumed to be 0.")
             st.session_state.user_responses[s_id]["confidence"] = 0
-         else:
-           st.session_state.user_responses.pop(s_id, None)
-         st.divider()
+        else:
+          st.session_state.user_responses.pop(s_id, None)
+        st.divider()
   
       #saving their responses to the tables on supabase
       if st.button("Submit"):

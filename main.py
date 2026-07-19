@@ -144,7 +144,7 @@ def english_choosing_num_sentences():
     num_sentences_choices = [15,25,30,50,75,100]
     st.session_state.num_sentences_selected = st.selectbox("Please choose the number of sentences you would like to label", num_sentences_choices)
     if st.button("Start"):
-      st.session_state.page = "english_labeling_sentences"
+      st.session_state.page = "labeling_sentences"
       st.rerun()
 
 def setswana_choosing_num_sentences():
@@ -152,7 +152,7 @@ def setswana_choosing_num_sentences():
     num_sentences_choices = [15,25,30,50,75,100]
     st.session_state.num_sentences_selected = st.selectbox("Ka kopo tlhopa palo ya dipolelo tse o batlang go di tshwaya", num_sentences_choices)
     if st.button("Simolola"):
-      st.session_state.page = "setswana_labeling_sentences"
+      st.session_state.page = "labeling_sentences"
       st.rerun()
 
 

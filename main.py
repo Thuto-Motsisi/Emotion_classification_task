@@ -74,7 +74,7 @@ def english_information_consent():
       if not checked:
         all_checked = False
     if st.button("Start labeling", disabled= not all_checked):
-      st.session_state.page = "login_page"
+      st.session_state.page = "english_login_page"
       st.rerun()
 
 def setswana_information_consent():
@@ -85,7 +85,7 @@ def setswana_information_consent():
     st.write("give info...(detailed)")
     st.markdown("---")
     
-    st.subheader("Consent")
+    st.subheader("Tumalano")
     consent_statements = [
      "Ke tlhaloseditswe ka patlisiso e. Ke tlhaloganya se thuto eno e leng ka sone.",
       "Ke a tlhaloganya gore go nna le seabe ga me ke boithaopo, nka kgona go tlogela dipolelo dipe fela tse ke sa batleng go di tshwaya, mme nka kgona go emisa nako nngwe le nngwe ntle le go otlhaiwa.",
@@ -100,33 +100,14 @@ def setswana_information_consent():
       if not checked:
         all_checked = False
     if st.button("Simolola go tshwaya", disabled= not all_checked):
-      st.session_state.page = "login_page"
+      st.session_state.page = "setswana_login_page"
       st.rerun()
-
-  
-
-
-
-#first page the participant sees. This is where they choose which language they are comfortable participating in.
-if "page" not in st.session_state:
-  st.session_state.page ="Welcome_page"
-if st.session_state.page =="Welcome_page":
-  st.write("Welcome to the Setswana Emotion labeling task, your contibution is highly appreciated." )
-  st.write("Please choose the language you are most comfortable with:" )
-  if st.button("English"):
-    st.session_state.page = "english_information_and_consent"
-    st.rerun()
-  if st.button("Setswana"):
-    st.session_state.page = "setswana_information_and_consent"
-    st.rerun()
-english_information_consent()
-setswana_information_consent()
-  
-
 
 #Login Page. The user inserts their user_id / create a new id. 
 #Also checking that the user_id they have filled in exists in the annotators table
-if st.session_state.page == "login_page":
+
+def english_login_page(): 
+if st.session_state.page == "english_login_page":
   st.title("Login Page")
   user_id = st.text_input(label= "User ID", placeholder = "Please enter your user id here")
   if st.button("Get a user id"):
@@ -136,18 +117,75 @@ if st.session_state.page == "login_page":
     found_in_annotators = supabase.table("annotators").select("annotator_id").eq("annotator_id", user_id).execute()
     if found_in_annotators.data !=0 or user_id==new_id:
       st.session_state.user_id = user_id
-      st.session_state.page ="choosing_num_sentences"
+      st.session_state.page ="english_choosing_num_sentences"
       st.rerun()
     else:
-      st.write("The user id is invalid, please create a new one")
+      st.write("The user id is invalid, please get a new one")
+
+def setswana_login_page(): 
+if st.session_state.page == "setswana_login_page":
+  st.title("Lefelo la go ikitsise")
+  user_id = st.text_input(label= "Letshwao la palo", placeholder = "Ka kopo, tsenya nomoro ya gago ya boitshupo fano")
+  if st.button("Kopa letshwao la boitshupo"):
+    new_id = generate_unique_id(supabase)
+    st.write(f"Letshwao la gago la palo ya boitshupo ke: {new_id}, Kopa o le boloke mo lefelong le e babalesegileng gore o kgone go le dirisa mo nakong e e tlang.")
+  if st.button("Tsena"):
+    found_in_annotators = supabase.table("annotators").select("annotator_id").eq("annotator_id", user_id).execute()
+    if found_in_annotators.data !=0 or user_id==new_id:
+      st.session_state.user_id = user_id
+      st.session_state.page ="setswana_choosing_num_sentences"
+      st.rerun()
+    else:
+      st.write("Letshwao la boitshupo ga le a nepagala, ka kopo kopa le lesha")
       
-#Participant choosing number of sentences they would like to label     
-if st.session_state.page == "choosing_num_sentences":
+#Participant choosing number of sentences they would like to label  
+def english_choosing_num_sentences():
+if st.session_state.page == "english_choosing_num_sentences":
   num_sentences_choices = [15,25,30,50,75,100]
-  st.session_state.num_sentences_selected = st.selectbox("Please choose the number of sentences you would love to label", num_sentences_choices)
+  st.session_state.num_sentences_selected = st.selectbox("Please choose the number of sentences you would like to label", num_sentences_choices)
   if st.button("Start"):
-    st.session_state.page = "labeling_sentences"
+    st.session_state.page = "english_labeling_sentences"
     st.rerun()
+
+def setswana_choosing_num_sentences():
+if st.session_state.page == "setswana_choosing_num_sentences":
+  num_sentences_choices = [15,25,30,50,75,100]
+  st.session_state.num_sentences_selected = st.selectbox("Ka kopo tlhopa palo ya dipolelo tse o batlang go di tshwaya", num_sentences_choices)
+  if st.button("Simolola"):
+    st.session_state.page = "setswana_labeling_sentences"
+    st.rerun()
+
+
+
+
+
+
+
+
+
+
+#first page the participant sees. This is where they choose which language they are comfortable participating in.
+if "page" not in st.session_state:
+  st.session_state.page ="Welcome_page"
+if st.session_state.page =="Welcome_page":
+  st.write("Welcome to the Setswana Emotion labeling task, your contibution is highly appreciated. Please choose the language you are most comfortable with:" )
+  st.write("O amogelesegile mo tirong ya go tshwaya maikutlo a Setswana, re lebogela go nna le seabe ga gago. Ka kopo, tlhopa loleme le o gololesegileng ka lone. " )
+  if st.button("English"):
+    st.session_state.page = "english_information_and_consent"
+    st.rerun()
+  if st.button("Setswana"):
+    st.session_state.page = "setswana_information_and_consent"
+    st.rerun()
+english_information_consent()
+setswana_information_consent()
+english_login_page()
+setswana_login_page()
+english_choosing_num_sentences()
+setswana_choosing_num_sentences()
+  
+
+
+
 
 #Assigning sentences to the user to label
 #check which sentences the user has already labeled and making sure that they dont get the same sentence again.

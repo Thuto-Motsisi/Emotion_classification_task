@@ -170,6 +170,8 @@ def english_labeling_sentences():
   if st.session_state.page == "english_labeling_sentences":
     emotions = ["Select an emotion", "Joy", "Anger", "Sadness", "Fear", "Disgust", "Neutral", "Surprise"]
     confidence_scale = list(range(0,101,5))
+    confidence_placeholder = ["Select confidence"]
+    confidence = confidence_placeholder + confidence_scale
     
     #choosing sentences for the user to label (from the eligible sentences, choosing the number they selected)
     if "chosen_ids" not in st.session_state:
@@ -191,15 +193,19 @@ def english_labeling_sentences():
           st.write(f"{idx}. {s_text}")
         with col_label_inputs:   
           chosen_emotion = st.selectbox("Select emotion", options = emotions, key = f"Emotion_for_{s_id}")
-        if chosen_emotion != "Select an emotion":
-          if s_id not in st.session_state.user_responses:
-            st.session_state.user_responses[s_id] = {}
+          emotion_chosen = chosen_emotion != "Select emotion"
+          chosen_confidence = st.selectbox("Select how confident you are", options = confidence, index = 0, key = f"confidence_for_{s_id}", disabled = not emotion_chosen)
+        if emotion_chosen:
+          st.session_state.user_responses.setdefault(s_id, {})
           st.session_state.user_responses[s_id]["emotion"] = chosen_emotion
-          chosen_confidence = st.selectbox("Select how confident you are", options = confidence_scale, index=0, key = f"confidence_for_{s_id}")
-          st.session_state.user_responses[s_id]["confidence"] = chosen_confidence
-        else: 
-          st.session_state.user_responses.pop(s_id, None)
-      st.divider()
+          if chosen_confidence != confidence_placeholder
+            st.session_state.user_responses[s_id]["confidence"] = chosen_confidence
+          else:
+            st.warning(f"Please set a confidence score for sentence {idx}. If you don't, it will be assumed to be 0.")
+            st.session_state.user_responses[s_id]["confidence"] = 0
+         else:
+           st.session_state.user_responses.pop(s_id, None)
+         st.divider()
   
       #saving their responses to the tables on supabase
       if st.button("Submit"):

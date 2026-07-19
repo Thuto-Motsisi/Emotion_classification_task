@@ -91,7 +91,7 @@ def setswana_information_consent():
       "Ke a tlhaloganya gore go nna le seabe ga me ke boithaopo, nka kgona go tlogela dipolelo dipe fela tse ke sa batleng go di tshwaya, mme nka kgona go emisa nako nngwe le nngwe ntle le go otlhaiwa.",
       "Ke a netefatsa gore ke mmueledi wa Setswana wa dingwaga tse di fa gare ga 18 le 65. ",
       "Ke dumela gore go nna le seabe go tla nna go sa itsiwe, leina la me kgotsa tshedimosetso e nngwe e e supang gore ke mang ga e kitla e kokoanngwa e be e dirisiwa ke mmatlisisi mo pegong ya gagwe ya dipatlisiso.", 
-      "Ke dumela gore matshwao a maikutlo le dipalo tsa tshepo tse ke di neelang di tsenngwe mo setlhopong sa tshedimosetso se se sa itsiweng gore ke mang, mme di gololwe mo setšhabeng morago ga thuto ya MSc ya mmatlisisi, mme e seng morago ga dingwanga tse tharo fa go sena go kokoanngwa tshedimosetso. ",
+      "Ke dumela gore matshwao a maikutlo le selekanyo sa tshepo tse ke di neelang di tsenngwe mo setlhopong sa tshedimosetso se se sa itsiweng gore ke mang, mme di gololwe mo setšhabeng morago ga thuto ya MSc ya mmatlisisi, mme e seng morago ga dingwanga tse tharo fa go sena go kokoanngwa tshedimosetso. ",
       "Ke dumela  gore babatlisisi ba bangwe ba ka dirisa tshedimosetso e ke e neelang mo tirong ya go kwala maikutlo a polelo, mme leina la me le tshedimosetso epe fela ya me ga e kitla e dirisiwa kgotsa e fetisiwa."
     ]
     all_checked = True
@@ -165,8 +165,7 @@ def get_eligible_sentence_ids(supabase, user_id):
   return eligible_sentence_ids
   
 def english_labeling_sentences():
-  #Assigning sentences to the user to label
-  #check which sentences the user has already labeled and making sure that they dont get the same sentence again.
+  """Assigning sentences to the user to label. check which sentences the user has already labeled and making sure that they dont get the same sentence again."""
   if st.session_state.page == "english_labeling_sentences":
     emotions = ["Select an emotion", "Joy", "Anger", "Sadness", "Fear", "Disgust", "Neutral", "Surprise"]
     confidence_scale = list(range(0,101,5))
@@ -216,16 +215,19 @@ def english_labeling_sentences():
           except Exception as e:
               st.error(f"Something went wrong: {e}")
           else: 
-            st.session_state.page = "End Page"
+            st.session_state.page = "english_end_page"
             st.rerun()
-      
+
+
 
 def setswana_labeling_sentences():
-  #Assigning sentences to the user to label
-  #check which sentences the user has already labeled and making sure that they dont get the same sentence again.
+  """#Assigning sentences to the user to label. check which sentences the user has already labeled and making sure that they dont get the same sentence again."""
+  
   if st.session_state.page == "setswana_labeling_sentences":
-    emotions = ["Tlhopa Maikutlo", "Boitumelo", "Kgalefo", "Khutsafalo", "Poifo", "Go sisimoga", "Ga gona maikutlo", "go makala"]
+    emotions = ["Tlhopa Maikutlo", "Boitumelo", "Kgalefo", "Khutsafalo", "Poifo", "Go sisimoga", "Ga gona maikutlo", "Go makala"]
     confidence_scale = list(range(0,101,5))
+    confidence_placeholder = ["Tlhopa selekanyo sa tshepo"]
+    confidence = confidence_placeholder + confidence_scale
     
     #choosing sentences for the user to label (from the eligible sentences, choosing the number they selected)
     if "chosen_ids" not in st.session_state:
@@ -237,31 +239,62 @@ def setswana_labeling_sentences():
     #storing their their responses
     if st.session_state.chosen_ids:
       response = supabase.table("sentences").select("sentence_id", "sentence").in_("sentence_id",st.session_state.chosen_ids).execute()
-      for row in response.data:
+      for idx, row in enumerate(response.data, start=1):
         s_id = row["sentence_id"]
         s_text = row["sentence"]
-        st.write(f"{s_text}")
-        chosen_emotion = st.selectbox("Select the emotion that is shown", options = emotions, key = f"Emotion_for_{s_id}")
-        if chosen_emotion != "Select an emotion":
-          if s_id not in st.session_state.user_responses:
-            st.session_state.user_responses[s_id] = {}
+
+        col_sentence, col_emotion, col_confidence = st.columns([60,20,20])
+
+        with col_sentence:
+          st.write(f"{idx}. {s_text}")
+        with col_emotion:   
+          chosen_emotion = st.selectbox("Maikutlo:", options = emotions, key = f"Emotion_for_{s_id}")
+          emotion_chosen = chosen_emotion != emotions[0]
+        with col_confidence:
+          chosen_confidence = st.selectbox("Selekanyo sa tshepo:", options = confidence, index = 0, key = f"confidence_for_{s_id}", disabled = not emotion_chosen)
+        if emotion_chosen:
+          st.session_state.user_responses.setdefault(s_id, {})
           st.session_state.user_responses[s_id]["emotion"] = chosen_emotion
-          chosen_confidence = st.selectbox("Select how confident you are", options = confidence_scale, index=0, key = f"confidence_for_{s_id}")
-          st.session_state.user_responses[s_id]["confidence"] = chosen_confidence
-        else: 
+          if chosen_confidence != confidence_placeholder:
+            st.session_state.user_responses[s_id]["confidence"] = chosen_confidence
+          else:
+            st.warning(f"Kopa o tlhope selekanyo sa tshepo sa maikutlo a polelo {idx}. Fa o sa dire jalo, go tla tsewa gore ke 0.")
+            st.session_state.user_responses[s_id]["confidence"] = 0
+        else:
           st.session_state.user_responses.pop(s_id, None)
-      st.divider()
+        st.divider()
   
       #saving their responses to the tables on supabase
-      if st.button("Submit"):
+      if st.button("Romela"):
           try:
               add_user_to_table(supabase, st.session_state.user_id)
               record_annotation(supabase, st.session_state.user_responses)
           except Exception as e:
-              st.error(f"Something went wrong: {e}")
+              st.error(f"Go nnile le phoso: {e}")
           else: 
-            st.session_state.page = "End Page"
+            st.session_state.page = "setswana_end_page"
             st.rerun()
+
+def english_end_page():
+  if st.session_state.page == "english_end_page":
+    st.success("Thank you for participating, please share the link to this labeling task with other Tswana people you know.")
+def setswana_end_page():
+  if st.session_state.page == "setswana_end_page":
+    st.success("Re lebogela go nna le karolo ga gago , kopa o abelane kgolagano ya tiro eno ya go tshwaya maikutlo le Batswana ba bangwe ba o ba itseng.")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -284,10 +317,11 @@ setswana_login_page()
 english_choosing_num_sentences()
 setswana_choosing_num_sentences()
 english_labeling_sentences()
+setswana_labeling_sentences()
+english_end_page()
+setswana_end_page()
 
-  
-if st.session_state.page == "End Page":
-  st.success("Thank you for participating, please share the link to this labeling task with other Tswana people you know.")
+
 
 
 

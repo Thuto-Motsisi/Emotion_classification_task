@@ -193,7 +193,7 @@ def english_labeling_sentences():
           st.write(f"{idx}. {s_text}")
         with col_emotion:   
           chosen_emotion = st.selectbox("Emotion:", options = emotions, key = f"Emotion_for_{s_id}")
-          emotion_chosen = chosen_emotion != "Select emotion"
+          emotion_chosen = chosen_emotion != emotions[0]
         with col_confidence:
           chosen_confidence = st.selectbox("Confidence:", options = confidence, index = 0, key = f"confidence_for_{s_id}", disabled = not emotion_chosen)
         if emotion_chosen:

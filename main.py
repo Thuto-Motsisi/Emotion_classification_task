@@ -107,53 +107,53 @@ def setswana_information_consent():
 #Also checking that the user_id they have filled in exists in the annotators table
 
 def english_login_page(): 
-if st.session_state.page == "english_login_page":
-  st.title("Login Page")
-  user_id = st.text_input(label= "User ID", placeholder = "Please enter your user id here")
-  if st.button("Get a user id"):
-    new_id = generate_unique_id(supabase)
-    st.write(f"Your new user id is: {new_id}, Please store it somewhere safely so that you can use it next time.")
-  if st.button("Log in"):
-    found_in_annotators = supabase.table("annotators").select("annotator_id").eq("annotator_id", user_id).execute()
-    if found_in_annotators.data !=0 or user_id==new_id:
-      st.session_state.user_id = user_id
-      st.session_state.page ="english_choosing_num_sentences"
-      st.rerun()
-    else:
-      st.write("The user id is invalid, please get a new one")
+  if st.session_state.page == "english_login_page":
+    st.title("Login Page")
+    user_id = st.text_input(label= "User ID", placeholder = "Please enter your user id here")
+    if st.button("Get a user id"):
+      new_id = generate_unique_id(supabase)
+      st.write(f"Your new user id is: {new_id}, Please store it somewhere safely so that you can use it next time.")
+    if st.button("Log in"):
+      found_in_annotators = supabase.table("annotators").select("annotator_id").eq("annotator_id", user_id).execute()
+      if found_in_annotators.data !=0 or user_id==new_id:
+        st.session_state.user_id = user_id
+        st.session_state.page ="english_choosing_num_sentences"
+        st.rerun()
+      else:
+        st.write("The user id is invalid, please get a new one")
 
 def setswana_login_page(): 
-if st.session_state.page == "setswana_login_page":
-  st.title("Lefelo la go ikitsise")
-  user_id = st.text_input(label= "Letshwao la palo", placeholder = "Ka kopo, tsenya nomoro ya gago ya boitshupo fano")
-  if st.button("Kopa letshwao la boitshupo"):
-    new_id = generate_unique_id(supabase)
-    st.write(f"Letshwao la gago la palo ya boitshupo ke: {new_id}, Kopa o le boloke mo lefelong le e babalesegileng gore o kgone go le dirisa mo nakong e e tlang.")
-  if st.button("Tsena"):
-    found_in_annotators = supabase.table("annotators").select("annotator_id").eq("annotator_id", user_id).execute()
-    if found_in_annotators.data !=0 or user_id==new_id:
-      st.session_state.user_id = user_id
-      st.session_state.page ="setswana_choosing_num_sentences"
-      st.rerun()
-    else:
-      st.write("Letshwao la boitshupo ga le a nepagala, ka kopo kopa le lesha")
+  if st.session_state.page == "setswana_login_page":
+    st.title("Lefelo la go ikitsise")
+    user_id = st.text_input(label= "Letshwao la palo", placeholder = "Ka kopo, tsenya nomoro ya gago ya boitshupo fano")
+    if st.button("Kopa letshwao la boitshupo"):
+      new_id = generate_unique_id(supabase)
+      st.write(f"Letshwao la gago la palo ya boitshupo ke: {new_id}, Kopa o le boloke mo lefelong le e babalesegileng gore o kgone go le dirisa mo nakong e e tlang.")
+    if st.button("Tsena"):
+      found_in_annotators = supabase.table("annotators").select("annotator_id").eq("annotator_id", user_id).execute()
+      if found_in_annotators.data !=0 or user_id==new_id:
+        st.session_state.user_id = user_id
+        st.session_state.page ="setswana_choosing_num_sentences"
+        st.rerun()
+      else:
+        st.write("Letshwao la boitshupo ga le a nepagala, ka kopo kopa le lesha")
       
 #Participant choosing number of sentences they would like to label  
 def english_choosing_num_sentences():
-if st.session_state.page == "english_choosing_num_sentences":
-  num_sentences_choices = [15,25,30,50,75,100]
-  st.session_state.num_sentences_selected = st.selectbox("Please choose the number of sentences you would like to label", num_sentences_choices)
-  if st.button("Start"):
-    st.session_state.page = "english_labeling_sentences"
-    st.rerun()
+  if st.session_state.page == "english_choosing_num_sentences":
+    num_sentences_choices = [15,25,30,50,75,100]
+    st.session_state.num_sentences_selected = st.selectbox("Please choose the number of sentences you would like to label", num_sentences_choices)
+    if st.button("Start"):
+      st.session_state.page = "english_labeling_sentences"
+      st.rerun()
 
 def setswana_choosing_num_sentences():
-if st.session_state.page == "setswana_choosing_num_sentences":
-  num_sentences_choices = [15,25,30,50,75,100]
-  st.session_state.num_sentences_selected = st.selectbox("Ka kopo tlhopa palo ya dipolelo tse o batlang go di tshwaya", num_sentences_choices)
-  if st.button("Simolola"):
-    st.session_state.page = "setswana_labeling_sentences"
-    st.rerun()
+  if st.session_state.page == "setswana_choosing_num_sentences":
+    num_sentences_choices = [15,25,30,50,75,100]
+    st.session_state.num_sentences_selected = st.selectbox("Ka kopo tlhopa palo ya dipolelo tse o batlang go di tshwaya", num_sentences_choices)
+    if st.button("Simolola"):
+      st.session_state.page = "setswana_labeling_sentences"
+      st.rerun()
 
 
 

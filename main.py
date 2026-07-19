@@ -190,6 +190,7 @@ setswana_choosing_num_sentences()
 #Assigning sentences to the user to label
 #check which sentences the user has already labeled and making sure that they dont get the same sentence again.
 if st.session_state.page == "labeling_sentences":
+  
   sentences_to_label = supabase.table("sentences").select("sentence_id").lt("label_count", 3).execute()
   sentences_to_label = sentences_to_label.data
   labeled_by_user = supabase.table("annotations").select("sentence_id").eq("annotator_id",st.session_state.user_id).execute()
@@ -198,6 +199,8 @@ if st.session_state.page == "labeling_sentences":
   eligible_sentences = [item for item in sentences_to_label if item["sentence_id"] not in ids_excluded_to_user]
   eligible_sentence_ids = [item["sentence_id"] for item in eligible_sentences]
   # chosen_ids = sorted(random.sample(eligible_sentence_ids, st.session_state.num_sentences_selected))
+
+  
   emotions = ["Select an emotion", "Joy", "Anger", "Sadness", "Fear", "Disgust", "Neutral", "Surprise"]
   confidence_scale = list(range(0,101,5))
   

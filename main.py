@@ -8,20 +8,11 @@ key = st.secrets["SUPABASE_KEY"]
 supabase = create_client(url,key)
 
 
-def id_exists(supabase, user_id) :
-  """checks if the id exists in the stored data"""
-  found_in_annotators = supabase.table("annotators").select("annotator_id").eq("annotator_id", user_id).execute()
-  found_in_annotations = supabase.table("annotations").select("annotator_id").eq("annotator_id", user_id).execute()
-  if not (len(found_in_annotators.data) == 0 and len(found_in_annotations.data) == 0):
-    return True
-  else:
-    return False
 
 
 def generate_unique_id(supabase):
-    """ Generates unique id for paticipants. conditions: id is not found in the annotators table """
-    
-    animals = ["CAT", "DOG", "OWL", "FOX", "RAM", "HEN", "COW"]
+    """ Generates unique id for paticipants. Query annotators table to make sure id is not assigned to someone else. Returns id if not found in annotators table."""
+    animals = ["CAT", "DOG", "OWL", "FOX", "RAM", "HEN", "COW", "JAY", "BEE", "ANT", "BAT", "BUG", "CUB", "RAY", "FLY", "DAM"]
     while True:
         animal = random.choice(animals)
         number = random.randint(1, 999)
@@ -30,14 +21,20 @@ def generate_unique_id(supabase):
         if len(found_in_annotators.data) == 0:
             return user_id
 
-def add_user_to_table(supabase, user_id):
-  check_id = id_exists(supabase, user_id)
-  if check_id == True:
-    pass
+def id_exists(supabase, user_id) :
+  """checks if the id exists in the annotators table. returns true if id exists."""
+  found_in_annotators = supabase.table("annotators").select("annotator_id").eq("annotator_id", user_id).execute()
+  if len(found_in_annotators.data) > 0:
+    return True
   else:
+    return False
+
+def add_user_to_table(supabase, user_id):
+  """user id gets recorded to the annotators table. I use this function in the record_annotations function. if user_id already exists in the table I pass."""
+  if not id_exists(supabase, user_id):
     supabase.table("annotators").insert({"annotator_id": user_id}).execute()
  
-
+    
 def record_annotation(supabase,user_responses):
    for s_id, response in user_responses.items():
     supabase.table("annotations").insert({"annotator_id": st.session_state.user_id, "sentence_id": s_id, "emotion_label":response["emotion"], "confidence_score": response["confidence"]}).execute()
@@ -52,7 +49,7 @@ def record_annotation(supabase,user_responses):
       supabase.table("labeled_sentences").update({f"label_{new_count}":response["emotion"], f"confidence_{new_count}":response["confidence"]}).eq("sentence_id", s_id).execute()
 
 def english_information_consent():
-  """Information page and consent in English"""
+  """Information page and consent statements shown to user in English. The user cannot move to the next page/press the "Start Labeling" button if they have not given consent. """
   if st.session_state.page == "english_information_and_consent":   
     st.title("Evaluating Pseudo-labeling for Setswana Emotion Classification")
     st.subheader("Information about the study")
@@ -78,7 +75,7 @@ def english_information_consent():
       st.rerun()
 
 def setswana_information_consent():
-  """Information page and consent in Setswana"""
+   """Information page and consent statements shown to user in Setswana. The user cannot move to the next page/press the "Start Labeling" button if they have not given consent. """
   if st.session_state.page == "setswana_information_and_consent":   
     st.title("Evaluating Pseudo-labeling for Setswana Emotion Classification")
     st.subheader("Information about the study")
@@ -107,6 +104,8 @@ def setswana_information_consent():
 #Also checking that the user_id they have filled in exists in the annotators table
 
 def english_login_page(): 
+  """User inputs their user id or they create a new one. Get rid of whitespace and convert id to uppercase (Generate id function above and whats stored in DB is uppercase)
+  validate that the entered id exists in the database or it's a newly generated one. """
   if st.session_state.page == "english_login_page":
     st.title("Login Page")
     user_id = st.text_input(label= "User ID", placeholder = "Please enter your user id here")
@@ -128,6 +127,8 @@ def english_login_page():
 
 
 def setswana_login_page(): 
+  """User inputs their user id or they create a new one. Get rid of whitespace and convert id to uppercase (Generate id function above and whats stored in DB is uppercase)
+  validate that the entered id exists in the database or it's a newly generated one. """
   if st.session_state.page == "setswana_login_page":
     st.title("Lefelo la go ikitsise")
     user_id = st.text_input(label= "Letshwao la boitshupo", placeholder = "Ka kopo, tsenya nomoro ya gago ya boitshupo fano")
@@ -148,9 +149,9 @@ def setswana_login_page():
         st.write("Letshwao la boitshupo ga le a nepagala, ka kopo kopa le lesha")
 
 
-      
-#Participant choosing number of sentences they would like to label  
+
 def english_choosing_num_sentences():
+  """Participant choosing number of sentences they are comfortable labeling"""
   if st.session_state.page == "english_choosing_num_sentences":
     num_sentences_choices = [15,25,30,50,75,100]
     st.session_state.num_sentences_selected = st.selectbox("Please choose the number of sentences you would like to label", num_sentences_choices)
@@ -159,6 +160,7 @@ def english_choosing_num_sentences():
       st.rerun()
 
 def setswana_choosing_num_sentences():
+  """Participant choosing number of sentences they are comfortable labeling"""
   if st.session_state.page == "setswana_choosing_num_sentences":
     num_sentences_choices = [15,25,30,50,75,100]
     st.session_state.num_sentences_selected = st.selectbox("Ka kopo tlhopa palo ya dipolelo tse o batlang go di tshwaya", num_sentences_choices)
@@ -167,6 +169,9 @@ def setswana_choosing_num_sentences():
       st.rerun()
 
 def get_eligible_sentence_ids(supabase, user_id):
+  """Extract sentences for the user to label. Look at sentences table for sentences which have been labeled less than 3 times. 
+  Get sentence_ids of sentences already labeled by the user. If user already labeled a sentence then exclude it.
+  Basically eligible sentences we can ask the user to label are those : 1. they have been labeled < 3 times. 2. they havent been labeled by user. """
   sentences_to_label = supabase.table("sentences").select("sentence_id").lt("label_count", 3).execute()
   sentences_to_label = sentences_to_label.data
   labeled_by_user = supabase.table("annotations").select("sentence_id").eq("annotator_id",st.session_state.user_id).execute()
@@ -176,7 +181,8 @@ def get_eligible_sentence_ids(supabase, user_id):
   return eligible_sentence_ids
   
 def english_labeling_sentences():
-  """Assigning sentences to the user to label. check which sentences the user has already labeled and making sure that they dont get the same sentence again."""
+  """Show the eligible sentences to the user. (showing number of sentences the user has chosen on previous page).
+  record user input. restrict user from choosing confidence if they havent chosen an emotion label. """
   if st.session_state.page == "english_labeling_sentences":
     emotions = ["Select an emotion", "Joy", "Anger", "Sadness", "Fear", "Disgust", "Neutral", "Surprise"]
     confidence_scale = list(range(0,101,5))
@@ -232,8 +238,8 @@ def english_labeling_sentences():
 
 
 def setswana_labeling_sentences():
-  """#Assigning sentences to the user to label. check which sentences the user has already labeled and making sure that they dont get the same sentence again."""
-  
+  """Show the eligible sentences to the user. (showing number of sentences the user has chosen on previous page).
+  record user input. restrict user from choosing confidence if they havent chosen an emotion label. """
   if st.session_state.page == "setswana_labeling_sentences":
     emotions = ["Tlhopa Maikutlo", "Boitumelo", "Kgalefo", "Khutsafalo", "Poifo", "Go sisimoga", "Ga gona maikutlo", "Go makala"]
     confidence_scale = list(range(0,101,5))

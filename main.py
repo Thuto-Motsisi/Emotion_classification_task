@@ -75,7 +75,7 @@ def english_information_consent():
       st.rerun()
 
 def setswana_information_consent():
-   """Information page and consent statements shown to user in Setswana. The user cannot move to the next page/press the "Start Labeling" button if they have not given consent. """
+  """Information page and consent statements shown to user in Setswana. The user cannot move to the next page/press the "Start Labeling" button if they have not given consent. """
   if st.session_state.page == "setswana_information_and_consent":   
     st.title("Evaluating Pseudo-labeling for Setswana Emotion Classification")
     st.subheader("Information about the study")

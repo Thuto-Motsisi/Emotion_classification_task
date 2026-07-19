@@ -144,7 +144,7 @@ def english_choosing_num_sentences():
     num_sentences_choices = [15,25,30,50,75,100]
     st.session_state.num_sentences_selected = st.selectbox("Please choose the number of sentences you would like to label", num_sentences_choices)
     if st.button("Start"):
-      st.session_state.page = "labeling_sentences"
+      st.session_state.page = "english_labeling_sentences"
       st.rerun()
 
 def setswana_choosing_num_sentences():
@@ -164,41 +164,10 @@ def get_eligible_sentence_ids(supabase, user_id):
   eligible_sentence_ids = [item["sentence_id"] for item in sentences_to_label if item["sentence_id"] not in excluded_ids]
   return eligible_sentence_ids
   
-
-
-
-
-
-
-
-
-#first page the participant sees. This is where they choose which language they are comfortable participating in.
-if "page" not in st.session_state:
-  st.session_state.page ="Welcome_page"
-if st.session_state.page =="Welcome_page":
-  st.write("Welcome to the Setswana Emotion labeling task, your contibution is highly appreciated. Please choose the language you are most comfortable with:" )
-  st.write("O amogelesegile mo tirong ya go tshwaya maikutlo a Setswana, re lebogela go nna le seabe ga gago. Ka kopo, tlhopa loleme le o gololesegileng ka lone. " )
-  if st.button("English"):
-    st.session_state.page = "english_information_and_consent"
-    st.rerun()
-  if st.button("Setswana"):
-    st.session_state.page = "setswana_information_and_consent"
-    st.rerun()
-english_information_consent()
-setswana_information_consent()
-english_login_page()
-setswana_login_page()
-english_choosing_num_sentences()
-setswana_choosing_num_sentences()
-english_labeling_sentences()
-  
-
-
-
 def english_labeling_sentences():
   #Assigning sentences to the user to label
   #check which sentences the user has already labeled and making sure that they dont get the same sentence again.
-  if st.session_state.page == "labeling_sentences":
+  if st.session_state.page == "english_labeling_sentences":
     emotions = ["Select an emotion", "Joy", "Anger", "Sadness", "Fear", "Disgust", "Neutral", "Surprise"]
     confidence_scale = list(range(0,101,5))
     
@@ -241,7 +210,38 @@ def english_labeling_sentences():
 if st.session_state.page == "End Page":
   st.success("Thank you for participating, please share the link to this labeling task with other Tswana people you know.")
 
-    st.write(st.session_state.user_id)
+
+
+
+
+
+
+
+#first page the participant sees. This is where they choose which language they are comfortable participating in.
+if "page" not in st.session_state:
+  st.session_state.page ="Welcome_page"
+if st.session_state.page =="Welcome_page":
+  st.write("Welcome to the Setswana Emotion labeling task, your contibution is highly appreciated. Please choose the language you are most comfortable with:" )
+  st.write("O amogelesegile mo tirong ya go tshwaya maikutlo a Setswana, re lebogela go nna le seabe ga gago. Ka kopo, tlhopa loleme le o gololesegileng ka lone. " )
+  if st.button("English"):
+    st.session_state.page = "english_information_and_consent"
+    st.rerun()
+  if st.button("Setswana"):
+    st.session_state.page = "setswana_information_and_consent"
+    st.rerun()
+english_information_consent()
+setswana_information_consent()
+english_login_page()
+setswana_login_page()
+english_choosing_num_sentences()
+setswana_choosing_num_sentences()
+english_labeling_sentences()
+  
+
+
+
+
+    # st.write(st.session_state.user_id)
     # st.write(st.session_state.chosen_ids)
     # st.write(st.session_state.user_responses)
 

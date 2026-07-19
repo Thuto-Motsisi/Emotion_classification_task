@@ -168,7 +168,7 @@ def english_labeling_sentences():
   #Assigning sentences to the user to label
   #check which sentences the user has already labeled and making sure that they dont get the same sentence again.
   if st.session_state.page == "english_labeling_sentences":
-    emotions = ["Select an emotion", "Joy", "Anger", "Sadness", "Fear", "", "Neutral", "Surprise"]
+    emotions = ["Select an emotion", "Joy", "Anger", "Sadness", "Fear", "Disgust", "Neutral", "Surprise"]
     confidence_scale = list(range(0,101,5))
     
     #choosing sentences for the user to label (from the eligible sentences, choosing the number they selected)
@@ -181,11 +181,16 @@ def english_labeling_sentences():
     #storing their their responses
     if st.session_state.chosen_ids:
       response = supabase.table("sentences").select("sentence_id", "sentence").in_("sentence_id",st.session_state.chosen_ids).execute()
-      for row in response.data:
+      for idx, row in enumerate(response.data, start=1):
         s_id = row["sentence_id"]
         s_text = row["sentence"]
-        st.write(f"{s_text}")
-        chosen_emotion = st.selectbox("Select the emotion that is hown", options = emotions, key = f"Emotion_for_{s_id}")
+
+        col_sentence, col_label_inputs = st.columns([3,2])
+
+        with col_sentence:
+          st.write(f"{idx}. {s_text}")
+        with col_label_inputs:   
+        chosen_emotion = st.selectbox("Select emotion", options = emotions, key = f"Emotion_for_{s_id}")
         if chosen_emotion != "Select an emotion":
           if s_id not in st.session_state.user_responses:
             st.session_state.user_responses[s_id] = {}

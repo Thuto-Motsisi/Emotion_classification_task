@@ -198,8 +198,8 @@ if st.session_state.page == "labeling_sentences":
   excluded_ids = {item["sentence_id"] for item in labeled_by_user}
   eligible_sentences = [item for item in sentences_to_label if item["sentence_id"] not in excluded_ids]
   eligible_sentence_ids = [item["sentence_id"] for item in eligible_sentences]
-  print(exluded_ids)
-  print(eligible_sentence_ids)
+  st.write(excluded_ids)
+  st.write(eligible_sentence_ids)
 
   
 #   emotions = ["Select an emotion", "Joy", "Anger", "Sadness", "Fear", "Disgust", "Neutral", "Surprise"]

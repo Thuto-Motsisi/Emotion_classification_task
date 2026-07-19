@@ -207,11 +207,6 @@ def english_labeling_sentences():
             st.session_state.page = "End Page"
             st.rerun()
       
-if st.session_state.page == "End Page":
-  st.success("Thank you for participating, please share the link to this labeling task with other Tswana people you know.")
-
-
-
 
 
 
@@ -236,7 +231,13 @@ setswana_login_page()
 english_choosing_num_sentences()
 setswana_choosing_num_sentences()
 english_labeling_sentences()
+
   
+if st.session_state.page == "End Page":
+  st.success("Thank you for participating, please share the link to this labeling task with other Tswana people you know.")
+
+
+
 
 
 

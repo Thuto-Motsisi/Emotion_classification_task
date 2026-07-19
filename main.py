@@ -186,8 +186,8 @@ def english_labeling_sentences():
   if st.session_state.page == "english_labeling_sentences":
     emotions = ["Select an emotion", "Joy", "Anger", "Sadness", "Fear", "Disgust", "Neutral", "Surprise"]
     confidence_scale = list(range(0,101,5))
-    confidence_placeholder = ["Select confidence"]
-    confidence = confidence_placeholder + confidence_scale
+    confidence_placeholder = "Select confidence"
+    confidence = [confidence_placeholder] + confidence_scale
     
     #choosing sentences for the user to label (from the eligible sentences, choosing the number they selected)
     if "chosen_ids" not in st.session_state:
@@ -243,8 +243,8 @@ def setswana_labeling_sentences():
   if st.session_state.page == "setswana_labeling_sentences":
     emotions = ["Tlhopa Maikutlo", "Boitumelo", "Kgalefo", "Khutsafalo", "Poifo", "Go sisimoga", "Ga gona maikutlo", "Go makala"]
     confidence_scale = list(range(0,101,5))
-    confidence_placeholder = ["Tlhopa selekanyo sa tshepo"]
-    confidence = confidence_placeholder + confidence_scale
+    confidence_placeholder = "Tlhopa selekanyo sa tshepo"
+    confidence = [confidence_placeholder] + confidence_scale
     
     #choosing sentences for the user to label (from the eligible sentences, choosing the number they selected)
     if "chosen_ids" not in st.session_state:

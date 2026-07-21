@@ -166,7 +166,6 @@ def get_eligible_sentence_ids(supabase, user_id):
 
 
 def labeling():
-    st.rerun()
     emotions = ["Select an emotion", "Joy", "Anger", "Sadness", "Fear", "Disgust", "Neutral", "Surprise"]
     confidence_scale = list(range(0,101,5))
     confidence_placeholder = "Select confidence"

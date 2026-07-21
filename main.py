@@ -114,7 +114,7 @@ def get_eligible_sentence_ids(supabase, user_id):
 
 
 
-def labeling(supabase, user_id):
+def labeling(supabase):
     emotions = ["Select an emotion", "Joy", "Anger", "Sadness", "Fear", "Disgust", "Neutral", "Surprise"]
     confidence_scale = list(range(0,101,5))
     confidence_placeholder = "Select confidence"
@@ -157,7 +157,7 @@ def labeling(supabase, user_id):
 
 
 
-def english_labeling_sentences(supabase, user_id):
+def english_labeling_sentences(supabase):
   """Show the eligible sentences to the user. (showing number of sentences the user has chosen on previous page).
   record user input. restrict user from choosing confidence if they havent chosen an emotion label. """
     

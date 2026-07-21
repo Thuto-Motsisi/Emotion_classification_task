@@ -110,7 +110,8 @@ def english_login_page():
     st.title("Login Page")
     user_id = st.text_input(label= "User ID", placeholder = "Please enter your user id here")
     if st.button("Get a user id"):
-      st.session_state.new_id = generate_unique_id(supabase)
+        if "new_id" not in session_state:
+            st.session_state.new_id = generate_unique_id(supabase)
     if "new_id" in st.session_state:
       st.write(f"Your new user id is: {st.session_state.new_id}, Please store it somewhere safely so that you can use it next time.")
     if st.button("Log in"):
@@ -119,7 +120,8 @@ def english_login_page():
       found_in_annotators = supabase.table("annotators").select("annotator_id").eq("annotator_id", entered_id).execute()
       id_is_valid = len(found_in_annotators.data) > 0 or (new_id is not None and entered_id == new_id)
       if entered_id and id_is_valid :
-        st.session_state.user_id = entered_id
+        if "user_id" not in session_state:
+            st.session_state.user_id = entered_id
         st.session_state.page ="english_labeling_sentences"
         st.rerun()
       else:
@@ -142,7 +144,8 @@ def setswana_login_page():
       found_in_annotators = supabase.table("annotators").select("annotator_id").eq("annotator_id", entered_id).execute()
       id_is_valid = len(found_in_annotators.data) > 0 or (new_id is not None and entered_id == new_id)
       if entered_id and id_is_valid :
-        st.session_state.user_id = entered_id
+        if "user_id" not in session_state:  
+            st.session_state.user_id = entered_id
         st.session_state.page ="setswana_choosing_num_sentences"
         st.rerun()
       else:
@@ -214,6 +217,7 @@ def english_labeling_sentences(supabase, user_id, user_responses):
     
   if st.session_state.page == "english_labeling_sentences":
     st.write("Give some info about the meanings/definitions of emotions.")  
+    st.divider()
    
   labeling(supabase, user_id)
   while st.button("next"):
@@ -333,9 +337,9 @@ english_information_consent()
 setswana_information_consent()
 english_login_page()
 setswana_login_page()
-user_id = st.session_state.get("user_id")
-user_responses = st.session_state.get("user_responses")
-english_labeling_sentences(supabase, user_id, user_responses)
+# user_id = st.session_state.get("user_id")
+# user_responses = st.session_state.get("user_responses")
+english_labeling_sentences(supabase, st.session_state.user_id, st.session_stae.user_responses)
 setswana_labeling_sentences()
 english_end_page()
 setswana_end_page()

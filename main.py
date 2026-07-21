@@ -180,13 +180,13 @@ def english_labeling_sentences(supabase):
     col1, col2 = st.columns([50,50])
       
     with col1 :
-        if st.button("stop", width = "stretch"):
+        if st.button("stop", width = "stretch", icon = ":material/arrow_forward:", icon_position = "right"):
             add_user_to_table(supabase, st.session_state.user_id)
             record_annotation(supabase, st.session_state.user_responses)
             st.session_state.page = "english_end_page"
             st.rerun()
     with col2:  
-        if st.button("next", width = "stretch"):
+        if st.button("next", width = "stretch", icon = ":material/cancel:", icon_position = "right"):
             add_user_to_table(supabase, st.session_state.user_id)
             record_annotation(supabase, st.session_state.user_responses)
             st.session_state.pop("chosen_ids", None)

@@ -116,9 +116,6 @@ def get_eligible_sentence_ids(supabase, user_id):
 
 def labeling(supabase):
     emotions = ["Select an emotion", "Joy", "Anger", "Sadness", "Fear", "Disgust", "Neutral", "Surprise"]
-    confidence_scale = list(range(0,101,5))
-    confidence_placeholder = "Select confidence"
-    confidence = [confidence_placeholder] + confidence_scale
     #choosing sentences for the user to label (from the eligible sentences, choosing the number they selected)
     if "chosen_ids" not in st.session_state:
       eligible_sentence_ids = get_eligible_sentence_ids(supabase, st.session_state.user_id)
@@ -141,7 +138,7 @@ def labeling(supabase):
           chosen_emotion = st.selectbox("Emotion:", options = emotions, key = f"Emotion_for_{s_id}")
           emotion_chosen = chosen_emotion != emotions[0]
         with col_confidence:
-          chosen_confidence = st.number_input("Confidence",min_value = 0, max_value = 100, value =0, step = 5, disabled = not emotion_chosen)
+          chosen_confidence = st.number_input("Confidence:",min_value = 0, max_value = 100, value = 0, step = 5,key = f"Confidence_for_{s_id} ,disabled = not emotion_chosen)
         if emotion_chosen:
           st.session_state.user_responses.setdefault(s_id, {})
           st.session_state.user_responses[s_id]["emotion"] = chosen_emotion

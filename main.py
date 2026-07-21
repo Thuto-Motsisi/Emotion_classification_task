@@ -219,24 +219,32 @@ def english_labeling_sentences(supabase, user_id):
     st.write("Give some info about the meanings/definitions of emotions.")  
     st.divider()
     
-    labeling(supabase, user_id)
-    while st.button("next"):
+    # labeling(supabase, user_id)
+    while st.session_state.page == "english_labeling_sentences" :
       try:
-          add_user_to_table(supabase, st.session_state.user_id)
-          record_annotation(supabase, st.session_state.user_responses)
           labeling(supabase, user_id)
-      except Exception as e:
-          st.error(f"Something went wrong: {e}")          
+          if st.button("next"):
+              add_user_to_table(supabase, st.session_state.user_id)
+              record_annotation(supabase, st.session_state.user_responses)
+              labeling(supabase, user_id)
+          if st.button("stop"):
+              add_user_to_table(supabase, st.session_state.user_id)
+              record_annotation(supabase, st.session_state.user_responses)
+              st.session_state.page = "english_end_page"
+              st.rerun()
+              
+    #   except Exception as e:
+    #       st.error(f"Something went wrong: {e}")          
              
-    if st.button("stop"): 
-      try:
-          add_user_to_table(supabase, st.session_state.user_id)
-          record_annotation(supabase, st.session_state.user_responses)
-      except Exception as e:
-          st.error(f"Go nnile le phoso: {e}")
-      else: 
-          st.session_state.page = "english_end_page"
-          st.rerun()
+    # if st.button("stop"): 
+    #   try:
+    #       add_user_to_table(supabase, st.session_state.user_id)
+    #       record_annotation(supabase, st.session_state.user_responses)
+    #   except Exception as e:
+    #       st.error(f"Go nnile le phoso: {e}")
+    #   else: 
+    #       st.session_state.page = "english_end_page"
+    #       st.rerun()
         
                  
                  

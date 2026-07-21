@@ -38,6 +38,7 @@ def add_user_to_table(supabase, user_id):
     
 def record_annotation(supabase,user_responses):
    for s_id, response in user_responses.items():
+    supabase.table("annotations").insert({"annotator_id": st.session_state.user_id, "sentence_id": s_id, "emotion_label":response["emotion"], "confidence_score": response["confidence"]}).execute()
     result = supabase.rpc("increment_label_count", {"sid": s_id}).execute()
     new_count = result.data
     supabase.table("sentences").update({"label_count" : new_count}).eq("sentence_id", s_id).execute()

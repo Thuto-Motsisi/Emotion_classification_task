@@ -172,7 +172,7 @@ def english_labeling_sentences(supabase):
         record_annotation(supabase, st.session_state.user_responses)
         st.session_state.pop("chosen_ids", None)
         st.session_state.pop("user_responses", None)
-        labeling(supabase)
+        st.rerun()
         
     if st.button("stop"):
         add_user_to_table(supabase, st.session_state.user_id)

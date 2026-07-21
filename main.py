@@ -172,6 +172,9 @@ def english_labeling_sentences(supabase):
              "Give some info about the meanings/definitions of emotions. Give some info about the meanings/definitions of emotions. Give some info about the meanings/definitions of emotions. Give some info about the meanings/definitions of emotions. Give some info about the meanings/definitions of emotions. Give some info about the meanings/definitions of emotions. Give some info about the meanings/definitions of emotions. Give some info about the meanings/definitions of emotions."
              
             )  
+    if st.session_state.scroll_to_top:
+        scroll_to_here(0, key = "top")
+        st.session_state.scroll_to_top = False   
     st.divider()
     st.markdown("""
     <style>
@@ -187,9 +190,7 @@ def english_labeling_sentences(supabase):
     }
     </style>
     """, unsafe_allow_html=True)
-    if st.session_state.scroll_to_top:
-        scroll_to_here(0, key = "top")
-        st.session_state.scroll_to_top = False  
+ 
     labeling(supabase)
       
     col1, col2 = st.columns([50,50])

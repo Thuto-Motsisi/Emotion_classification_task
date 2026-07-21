@@ -334,15 +334,15 @@ if st.session_state.page =="Welcome_page":
     st.session_state.page = "setswana_information_and_consent"
     st.rerun()
 english_information_consent()
-setswana_information_consent()
+# setswana_information_consent()
 english_login_page()
-setswana_login_page()
+# setswana_login_page()
 # user_id = st.session_state.get("user_id")
 # user_responses = st.session_state.get("user_responses")
 english_labeling_sentences(supabase, st.session_state.user_id, st.session_stae.user_responses)
-setswana_labeling_sentences()
+# setswana_labeling_sentences()
 english_end_page()
-setswana_end_page()
+# setswana_end_page()
 
 
 

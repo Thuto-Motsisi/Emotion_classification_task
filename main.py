@@ -1,5 +1,6 @@
 import streamlit as st
 from supabase import create_client
+from streamlit_scroll_to_top import scroll_to_here
 import random
 
 #Initialize supabase client

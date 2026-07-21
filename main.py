@@ -120,7 +120,7 @@ def english_login_page():
       id_is_valid = len(found_in_annotators.data) > 0 or (new_id is not None and entered_id == new_id)
       if entered_id and id_is_valid :
         st.session_state.user_id = entered_id
-        st.session_state.page ="english_choosing_num_sentences"
+        st.session_state.page ="english_labeling_sentences"
         st.rerun()
       else:
         st.write("The user id is invalid, please get a new one")
@@ -185,56 +185,79 @@ def english_labeling_sentences():
   record user input. restrict user from choosing confidence if they havent chosen an emotion label. """
     
   if st.session_state.page == "english_labeling_sentences":
+    st.write("Give some info about the meanings/definitions of emotions.")  
     emotions = ["Select an emotion", "Joy", "Anger", "Sadness", "Fear", "Disgust", "Neutral", "Surprise"]
     confidence_scale = list(range(0,101,5))
     confidence_placeholder = "Select confidence"
     confidence = [confidence_placeholder] + confidence_scale
+
+    while st.button("Next"): 
+        #choosing sentences for the user to label (from the eligible sentences, choosing the number they selected)
+        if "chosen_ids" not in st.session_state:
+          eligible_sentence_ids = get_eligible_sentence_ids(supabase, st.session_state.user_id)
+          st.session_state.chosen_ids = sorted(random.sample(eligible_sentence_ids, 10))
+        if "user_responses" not in st.session_state:
+          st.session_state.user_responses = {}
+      
+        #storing their their responses
+        if st.session_state.chosen_ids:
+          response = supabase.table("sentences").select("sentence_id", "sentence").in_("sentence_id",st.session_state.chosen_ids).execute()
+          for idx, row in enumerate(response.data, start=1):
+            s_id = row["sentence_id"]
+            s_text = row["sentence"]
     
-    #choosing sentences for the user to label (from the eligible sentences, choosing the number they selected)
-    if "chosen_ids" not in st.session_state:
-      eligible_sentence_ids = get_eligible_sentence_ids(supabase, st.session_state.user_id)
-      st.session_state.chosen_ids = sorted(random.sample(eligible_sentence_ids, 10))
-    if "user_responses" not in st.session_state:
-      st.session_state.user_responses = {}
-  
-    #storing their their responses
-    if st.session_state.chosen_ids:
-      response = supabase.table("sentences").select("sentence_id", "sentence").in_("sentence_id",st.session_state.chosen_ids).execute()
-      for idx, row in enumerate(response.data, start=1):
-        s_id = row["sentence_id"]
-        s_text = row["sentence"]
-
-        col_sentence, col_emotion, col_confidence = st.columns([60,20,20])
-
-        with col_sentence:
-          st.write(f"{idx}. {s_text}")
-        with col_emotion:   
-          chosen_emotion = st.selectbox("Emotion:", options = emotions, key = f"Emotion_for_{s_id}")
-          emotion_chosen = chosen_emotion != emotions[0]
-        with col_confidence:
-          chosen_confidence = st.selectbox("Confidence:", options = confidence, index = 0, key = f"confidence_for_{s_id}", disabled = not emotion_chosen)
-        if emotion_chosen:
-          st.session_state.user_responses.setdefault(s_id, {})
-          st.session_state.user_responses[s_id]["emotion"] = chosen_emotion
-          if chosen_confidence != confidence_placeholder:
-            st.session_state.user_responses[s_id]["confidence"] = chosen_confidence
-          else:
-            st.warning(f"Please set a confidence score for sentence {idx}. If you don't, it will be assumed to be 0.")
-            st.session_state.user_responses[s_id]["confidence"] = 0
-        else:
-          st.session_state.user_responses.pop(s_id, None)
-        st.divider()
-  
-      #saving their responses to the tables on supabase
-      if st.button("Submit"):
-          try:
+            col_sentence, col_emotion, col_confidence = st.columns([60,20,20])
+    
+            with col_sentence:
+              st.write(f"{idx}. {s_text}")
+            with col_emotion:   
+              chosen_emotion = st.selectbox("Emotion:", options = emotions, key = f"Emotion_for_{s_id}")
+              emotion_chosen = chosen_emotion != emotions[0]
+            with col_confidence:
+              chosen_confidence = st.selectbox("Confidence:", options = confidence, index = 0, key = f"confidence_for_{s_id}", disabled = not emotion_chosen)
+            if emotion_chosen:
+              st.session_state.user_responses.setdefault(s_id, {})
+              st.session_state.user_responses[s_id]["emotion"] = chosen_emotion
+              if chosen_confidence != confidence_placeholder:
+                st.session_state.user_responses[s_id]["confidence"] = chosen_confidence
+              else:
+                st.warning(f"Please set a confidence score for sentence {idx}. If you don't, it will be assumed to be 0.")
+                st.session_state.user_responses[s_id]["confidence"] = 0
+            else:
+              st.session_state.user_responses.pop(s_id, None)
+            st.divider()
+         if st.button("next"):
+             try:
+                 add_user_to_table(supabase, st.session_state.user_id)
+                 record_annotation(supabase, st.session_state.user_responses)
+                 st.rerun()
+             except Exception as e:
+                 st.error(f"Something went wrong: {e}")
+                 
+    if st.button("stop"): 
+        try:
               add_user_to_table(supabase, st.session_state.user_id)
               record_annotation(supabase, st.session_state.user_responses)
           except Exception as e:
-              st.error(f"Something went wrong: {e}")
+              st.error(f"Go nnile le phoso: {e}")
           else: 
-            st.session_state.page = "english_end_page"
+            st.session_state.page = "setswana_end_page"
             st.rerun()
+        
+                 
+                 
+             
+      
+      # #saving their responses to the tables on supabase
+      # if st.button("Submit"):
+      #     try:
+      #         add_user_to_table(supabase, st.session_state.user_id)
+      #         record_annotation(supabase, st.session_state.user_responses)
+      #     except Exception as e:
+      #         st.error(f"Something went wrong: {e}")
+      #     else: 
+      #       st.session_state.page = "english_end_page"
+      #       st.rerun()
 
 
 

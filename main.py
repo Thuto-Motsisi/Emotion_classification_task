@@ -175,12 +175,12 @@ def english_labeling_sentences(supabase):
     <style>
     .st-key-next_btn button {
         background-color: #21ba45;   
-        color: black;
+        color: white;
         font-weight: bold;
     }
     .st-key-stop_btn button {
         background-color: #db2828;   
-        color: black;
+        color: white;
         font-weight: bold;
     }
     </style>
@@ -195,13 +195,13 @@ def english_labeling_sentences(supabase):
     col1, col2 = st.columns([50,50])
       
     with col1 :
-        if st.button("stop", width = "stretch", icon = ":material/cancel:", icon_position = "right", key = "stop_btn"):
+        if st.button("stop", width = "stetch", icon = ":material/cancel:", icon_position = "right", key = "stop_btn"):
             add_user_to_table(supabase, st.session_state.user_id)
             record_annotation(supabase, st.session_state.user_responses)
             st.session_state.page = "english_end_page"
             st.rerun()
     with col2:  
-        if st.button("next", width = "stretch", icon = ":material/arrow_forward:", icon_position = "right", key = "next_btn"):
+        if st.button("next", width = "content", icon = ":material/arrow_forward:", icon_position = "right", key = "next_btn"):
             add_user_to_table(supabase, st.session_state.user_id)
             record_annotation(supabase, st.session_state.user_responses)
             st.session_state.pop("chosen_ids", None)

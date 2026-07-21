@@ -211,7 +211,7 @@ def labeling(supabase, user_id):
 
 
 
-def english_labeling_sentences(supabase, user_id, user_responses):
+def english_labeling_sentences(supabase, user_id):
   """Show the eligible sentences to the user. (showing number of sentences the user has chosen on previous page).
   record user input. restrict user from choosing confidence if they havent chosen an emotion label. """
     
@@ -339,7 +339,7 @@ english_login_page()
 # setswana_login_page()
 # user_id = st.session_state.get("user_id")
 # user_responses = st.session_state.get("user_responses")
-english_labeling_sentences(supabase, st.session_state.user_id, st.session_stae.user_responses)
+english_labeling_sentences()
 # setswana_labeling_sentences()
 english_end_page()
 # setswana_end_page()

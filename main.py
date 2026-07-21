@@ -158,8 +158,12 @@ def labeling(supabase):
 def english_labeling_sentences(supabase):
   """Show the eligible sentences to the user. (showing number of sentences the user has chosen on previous page).
   record user input. restrict user from choosing confidence if they havent chosen an emotion label. """
-    
+
+
   if st.session_state.page == "english_labeling_sentences":
+    if st.session_state.scroll_to_top:
+        scroll_to_here(0, key = "top")
+        st.session_state.scroll_to_top = False    
     st.write("Give some info about the meanings/definitions of emotions. Give some info about the meanings/definitions of emotions. Give some info about the meanings/definitions of emotions. Give some info about the meanings/definitions of emotions. Give some info about the meanings/definitions of emotions. Give some info about the meanings/definitions of emotions. Give some info about the meanings/definitions of emotions. Give some info about the meanings/definitions of emotions." \
             "Give some info about the meanings/definitions of emotions. Give some info about the meanings/definitions of emotions. Give some info about the meanings/definitions of emotions. Give some info about the meanings/definitions of emotions. Give some info about the meanings/definitions of emotions. Give some info about the meanings/definitions of emotions. Give some info about the meanings/definitions of emotions. Give some info about the meanings/definitions of emotions."\
              "Give some info about the meanings/definitions of emotions. Give some info about the meanings/definitions of emotions. Give some info about the meanings/definitions of emotions. Give some info about the meanings/definitions of emotions. Give some info about the meanings/definitions of emotions. Give some info about the meanings/definitions of emotions. Give some info about the meanings/definitions of emotions. Give some info about the meanings/definitions of emotions."\
@@ -186,9 +190,7 @@ def english_labeling_sentences(supabase):
     </style>
     """, unsafe_allow_html=True)
 
-    if st.session_state.scroll_to_top:
-        scroll_to_here(0, key = "top")
-        st.session_state.scroll_to_top = False
+
       
     labeling(supabase)
       

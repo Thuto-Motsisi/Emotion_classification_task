@@ -226,21 +226,21 @@ def english_labeling_sentences():
             else:
               st.session_state.user_responses.pop(s_id, None)
             st.divider()
-         if st.button("next"):
-             try:
-                 add_user_to_table(supabase, st.session_state.user_id)
-                 record_annotation(supabase, st.session_state.user_responses)
-                 st.rerun()
-             except Exception as e:
-                 st.error(f"Something went wrong: {e}")
+        if st.button("next"):
+            try:
+                add_user_to_table(supabase, st.session_state.user_id)
+                record_annotation(supabase, st.session_state.user_responses)
+                st.rerun()
+            except Exception as e:
+                st.error(f"Something went wrong: {e}")
                  
     if st.button("stop"): 
         try:
-              add_user_to_table(supabase, st.session_state.user_id)
-              record_annotation(supabase, st.session_state.user_responses)
-          except Exception as e:
-              st.error(f"Go nnile le phoso: {e}")
-          else: 
+          add_user_to_table(supabase, st.session_state.user_id)
+          record_annotation(supabase, st.session_state.user_responses)
+        except Exception as e:
+            st.error(f"Go nnile le phoso: {e}")
+        else: 
             st.session_state.page = "setswana_end_page"
             st.rerun()
         

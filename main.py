@@ -167,7 +167,7 @@ def english_labeling_sentences(supabase):
     
     # labeling(supabase, user_id)
     while st.session_state.page == "english_labeling_sentences" :
-        labeling(supabase, user_id)
+        labeling(supabase)
         if st.button("next"):
             add_user_to_table(supabase, st.session_state.user_id)
             record_annotation(supabase, st.session_state.user_responses)

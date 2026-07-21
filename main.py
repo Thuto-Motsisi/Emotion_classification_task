@@ -138,7 +138,7 @@ def labeling(supabase):
           chosen_emotion = st.selectbox("Emotion:", options = emotions, key = f"Emotion_for_{s_id}")
           emotion_chosen = chosen_emotion != emotions[0]
         with col_confidence:
-          chosen_confidence = st.number_input("Confidence:",min_value = 0, max_value = 100, value = 0, step = 5,key = f"Confidence_for_{s_id} ,disabled = not emotion_chosen)
+          chosen_confidence = st.number_input("Confidence:",min_value = 0, max_value = 100, value = 0, step = 5,key = f"Confidence_for_{s_id}" ,disabled = not emotion_chosen)
         if emotion_chosen:
           st.session_state.user_responses.setdefault(s_id, {})
           st.session_state.user_responses[s_id]["emotion"] = chosen_emotion

@@ -171,7 +171,7 @@ def english_labeling_sentences(supabase, user_id):
         if st.button("next"):
             add_user_to_table(supabase, st.session_state.user_id)
             record_annotation(supabase, st.session_state.user_responses)
-            labeling(supabase, user_id)
+            labeling(supabase)
         if st.button("stop"):
             add_user_to_table(supabase, st.session_state.user_id)
             record_annotation(supabase, st.session_state.user_responses)
@@ -199,7 +199,7 @@ if st.session_state.page =="Welcome_page":
     st.rerun()
 english_information_consent()
 english_login_page()
-english_labeling_sentences(supabase,st.session_state.user_id)
+english_labeling_sentences(supabase)
 english_end_page()
 
 

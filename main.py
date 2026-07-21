@@ -165,19 +165,20 @@ def english_labeling_sentences(supabase):
     st.write("Give some info about the meanings/definitions of emotions.")  
     st.divider()
     
-    # labeling(supabase, user_id)
-    while st.session_state.page == "english_labeling_sentences" :
+    labeling(supabase)
+   
+    if st.button("next"):
+        add_user_to_table(supabase, st.session_state.user_id)
+        record_annotation(supabase, st.session_state.user_responses)
+        st.session_state.pop("chosen_ids", None)
+        st.session_state.pop("user_responses", None)
         labeling(supabase)
-        if st.button("next"):
-            add_user_to_table(supabase, st.session_state.user_id)
-            record_annotation(supabase, st.session_state.user_responses)
-            st.session_state.pop("chosen_ids", None)
-            st.session_state.pop("user_responses", None)
-        if st.button("stop"):
-            add_user_to_table(supabase, st.session_state.user_id)
-            record_annotation(supabase, st.session_state.user_responses)
-            st.session_state.page = "english_end_page"
-            st.rerun()
+        
+    if st.button("stop"):
+        add_user_to_table(supabase, st.session_state.user_id)
+        record_annotation(supabase, st.session_state.user_responses)
+        st.session_state.page = "english_end_page"
+        st.rerun()
                       
 def english_end_page():
   if st.session_state.page == "english_end_page":

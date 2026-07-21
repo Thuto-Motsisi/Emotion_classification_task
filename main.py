@@ -110,7 +110,7 @@ def english_login_page():
     st.title("Login Page")
     user_id = st.text_input(label= "User ID", placeholder = "Please enter your user id here")
     if st.button("Get a user id"):
-        if "new_id" not in session_state:
+        if "new_id" not in st.session_state:
             st.session_state.new_id = generate_unique_id(supabase)
     if "new_id" in st.session_state:
       st.write(f"Your new user id is: {st.session_state.new_id}, Please store it somewhere safely so that you can use it next time.")

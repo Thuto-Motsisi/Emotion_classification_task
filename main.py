@@ -162,7 +162,10 @@ def english_labeling_sentences(supabase):
   if st.session_state.page == "english_labeling_sentences":
     st.write("Give some info about the meanings/definitions of emotions.")  
     st.divider()
-    
+    if st.session_state.scroll_to_top:
+        scroll_to_here(0, key = "top")
+        st.session_state.scroll_to_top = False
+      
     labeling(supabase)
    
     if st.button("next"):
@@ -170,6 +173,7 @@ def english_labeling_sentences(supabase):
         record_annotation(supabase, st.session_state.user_responses)
         st.session_state.pop("chosen_ids", None)
         st.session_state.pop("user_responses", None)
+        st.session_state.scroll_to_top = True
         st.rerun()
         
     if st.button("stop"):
@@ -188,6 +192,8 @@ def english_end_page():
 #first page the participant sees. This is where they choose which language they are comfortable participating in.
 if "page" not in st.session_state:
   st.session_state.page ="Welcome_page"
+if "scroll_to_top" not in st.session_state :
+    st.session_state.scroll_to_top = False
 if st.session_state.page =="Welcome_page":
   st.write("Welcome to the Setswana Emotion labeling task, your contibution is highly appreciated. Please choose the language you are most comfortable with:" )
   st.write("O amogelesegile mo tirong ya go tshwaya maikutlo a Setswana, re lebogela go nna le seabe ga gago. Ka kopo, tlhopa loleme le o gololesegileng ka lone. " )

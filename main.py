@@ -150,23 +150,23 @@ def setswana_login_page():
 
 
 
-def english_choosing_num_sentences():
-  """Participant choosing number of sentences they are comfortable labeling"""
-  if st.session_state.page == "english_choosing_num_sentences":
-    num_sentences_choices = [15,25,30,50,75,100]
-    st.session_state.num_sentences_selected = st.selectbox("Please choose the number of sentences you would like to label", num_sentences_choices)
-    if st.button("Start"):
-      st.session_state.page = "english_labeling_sentences"
-      st.rerun()
+# def english_choosing_num_sentences():
+#   """Participant choosing number of sentences they are comfortable labeling"""
+#   if st.session_state.page == "english_choosing_num_sentences":
+#     num_sentences_choices = [15,25,30,50,75,100]
+#     st.session_state.num_sentences_selected = st.selectbox("Please choose the number of sentences you would like to label", num_sentences_choices)
+#     if st.button("Start"):
+#       st.session_state.page = "english_labeling_sentences"
+#       st.rerun()
 
-def setswana_choosing_num_sentences():
-  """Participant choosing number of sentences they are comfortable labeling"""
-  if st.session_state.page == "setswana_choosing_num_sentences":
-    num_sentences_choices = [15,25,30,50,75,100]
-    st.session_state.num_sentences_selected = st.selectbox("Ka kopo tlhopa palo ya dipolelo tse o batlang go di tshwaya", num_sentences_choices)
-    if st.button("Simolola"):
-      st.session_state.page = "setswana_labeling_sentences"
-      st.rerun()
+# def setswana_choosing_num_sentences():
+#   """Participant choosing number of sentences they are comfortable labeling"""
+#   if st.session_state.page == "setswana_choosing_num_sentences":
+#     num_sentences_choices = [15,25,30,50,75,100]
+#     st.session_state.num_sentences_selected = st.selectbox("Ka kopo tlhopa palo ya dipolelo tse o batlang go di tshwaya", num_sentences_choices)
+#     if st.button("Simolola"):
+#       st.session_state.page = "setswana_labeling_sentences"
+#       st.rerun()
 
 def get_eligible_sentence_ids(supabase, user_id):
   """Extract sentences for the user to label. Look at sentences table for sentences which have been labeled less than 3 times. 
@@ -183,6 +183,7 @@ def get_eligible_sentence_ids(supabase, user_id):
 def english_labeling_sentences():
   """Show the eligible sentences to the user. (showing number of sentences the user has chosen on previous page).
   record user input. restrict user from choosing confidence if they havent chosen an emotion label. """
+    
   if st.session_state.page == "english_labeling_sentences":
     emotions = ["Select an emotion", "Joy", "Anger", "Sadness", "Fear", "Disgust", "Neutral", "Surprise"]
     confidence_scale = list(range(0,101,5))
@@ -192,7 +193,7 @@ def english_labeling_sentences():
     #choosing sentences for the user to label (from the eligible sentences, choosing the number they selected)
     if "chosen_ids" not in st.session_state:
       eligible_sentence_ids = get_eligible_sentence_ids(supabase, st.session_state.user_id)
-      st.session_state.chosen_ids = sorted(random.sample(eligible_sentence_ids, st.session_state.num_sentences_selected))
+      st.session_state.chosen_ids = sorted(random.sample(eligible_sentence_ids, 10))
     if "user_responses" not in st.session_state:
       st.session_state.user_responses = {}
   

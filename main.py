@@ -218,9 +218,9 @@ def english_labeling_sentences(supabase, user_id):
   if st.session_state.page == "english_labeling_sentences":
     st.write("Give some info about the meanings/definitions of emotions.")  
     st.divider()
-   
-  labeling(supabase, user_id)
-  while st.button("next"):
+    
+    labeling(supabase, user_id)
+    while st.button("next"):
       try:
           add_user_to_table(supabase, st.session_state.user_id)
           record_annotation(supabase, st.session_state.user_responses)
@@ -228,7 +228,7 @@ def english_labeling_sentences(supabase, user_id):
       except Exception as e:
           st.error(f"Something went wrong: {e}")          
              
-  if st.button("stop"): 
+    if st.button("stop"): 
       try:
           add_user_to_table(supabase, st.session_state.user_id)
           record_annotation(supabase, st.session_state.user_responses)

@@ -120,7 +120,7 @@ def english_login_page():
       found_in_annotators = supabase.table("annotators").select("annotator_id").eq("annotator_id", entered_id).execute()
       id_is_valid = len(found_in_annotators.data) > 0 or (new_id is not None and entered_id == new_id)
       if entered_id and id_is_valid :
-        if "user_id" not in session_state:
+        if "user_id" not in st.session_state:
             st.session_state.user_id = entered_id
         st.session_state.page ="english_labeling_sentences"
         st.rerun()

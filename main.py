@@ -175,12 +175,12 @@ def english_labeling_sentences(supabase):
     <style>
     .st-key-next_btn button {
         background-color: #21ba45;   
-        color: white;
+        color: black;
         font-weight: bold;
     }
     .st-key-stop_btn button {
         background-color: #db2828;   
-        color: white;
+        color: black;
         font-weight: bold;
     }
     </style>

@@ -241,7 +241,7 @@ def english_labeling_sentences():
         except Exception as e:
             st.error(f"Go nnile le phoso: {e}")
         else: 
-            st.session_state.page = "setswana_end_page"
+            st.session_state.page = "english_end_page"
             st.rerun()
         
                  
@@ -355,8 +355,6 @@ english_information_consent()
 setswana_information_consent()
 english_login_page()
 setswana_login_page()
-english_choosing_num_sentences()
-setswana_choosing_num_sentences()
 english_labeling_sentences()
 setswana_labeling_sentences()
 english_end_page()
@@ -370,35 +368,7 @@ setswana_end_page()
 
 
 
-    # st.write(st.session_state.user_id)
-    # st.write(st.session_state.chosen_ids)
-    # st.write(st.session_state.user_responses)
 
-
-    
-  #   sentences = [row["sentence"] for row in response.data]
-  # else:
-  #   sentences= []
-  
-  # chosen_
-
-
-
-  
-  # st.write(f"{eligible_sentences}")
-  # st.write(f"{eligible_sentence_ids}")
-  # st.write(f"{chosen_ids}")
-  # st.write(f"{sentences}")
-  # st.session_state.chosen_ids = chosen_ids
-  # st.session_state.page = "showing_sentences"
-  # st.rerun()
-
-# if st.session_state.page =="showing_sentences":
-#   st.write("Please label the sentences")
-#   sentences = []
-#   for i in st.session_state.chosen_ids:
-#     chosen_sentence = supabase.table("sentences").eq("sentence_id", i).execute()
-#     sentences = sentences.append()
   
 
 

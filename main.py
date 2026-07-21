@@ -237,6 +237,7 @@ def english_labeling_sentences():
       try:
           add_user_to_table(supabase, st.session_state.user_id)
           record_annotation(supabase, st.session_state.user_responses)
+          st.rerun()
           labeling()
       except Exception as e:
           st.error(f"Something went wrong: {e}")          

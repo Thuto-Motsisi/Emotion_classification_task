@@ -8,9 +8,6 @@ url = st.secrets["SUPABASE_URL"]
 key = st.secrets["SUPABASE_KEY"]
 supabase = create_client(url,key)
 
-
-
-
 def generate_unique_id(supabase):
     """ Generates unique id for paticipants. Query annotators table to make sure id is not assigned to someone else. Returns id if not found in annotators table."""
     animals = ["CAT", "DOG", "OWL", "FOX", "RAM", "HEN", "COW", "JAY", "BEE", "ANT", "BAT", "BUG", "CUB", "RAY", "FLY", "DAM"]
@@ -214,8 +211,6 @@ def english_labeling_sentences(supabase):
 def english_end_page():
   if st.session_state.page == "english_end_page":
     st.success("Thank you for participating, please share the link to this labeling task with other Tswana people you know.")
-
-
 
 
 #first page the participant sees. This is where they choose which language they are comfortable participating in.

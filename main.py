@@ -111,6 +111,70 @@ def get_eligible_sentence_ids(supabase, user_id):
 
 
 
+def setswana_information_consent():
+  """Information page and consent statements shown to user in Setswana. The user cannot move to the next page/press the "Start Labeling" button if they have not given consent. """
+  if st.session_state.page == "setswana_information_and_consent":   
+    st.title("Evaluating Pseudo-labeling for Setswana Emotion Classification")
+    st.subheader("Information about the study")
+    st.write("give info...(detailed)")
+    st.markdown("---")
+    
+    st.subheader("Tumalano")
+    consent_statements = [
+     "Ke tlhaloseditswe ka patlisiso e. Ke tlhaloganya se thuto eno e leng ka sone.",
+      "Ke a tlhaloganya gore go nna le seabe ga me ke boithaopo, nka kgona go tlogela dipolelo dipe fela tse ke sa batleng go di tshwaya, mme nka kgona go emisa nako nngwe le nngwe ntle le go otlhaiwa.",
+      "Ke a netefatsa gore ke mmueledi wa Setswana wa dingwaga tse di fa gare ga 18 le 65. ",
+      "Ke dumela gore go nna le seabe go tla nna go sa itsiwe, leina la me kgotsa tshedimosetso e nngwe e e supang gore ke mang ga e kitla e kokoanngwa e be e dirisiwa ke mmatlisisi mo pegong ya gagwe ya dipatlisiso.", 
+      "Ke dumela gore matshwao a maikutlo le selekanyo sa tshepo tse ke di neelang di tsenngwe mo setlhopong sa tshedimosetso se se sa itsiweng gore ke mang, mme di gololwe mo setšhabeng morago ga thuto ya MSc ya mmatlisisi, mme e seng morago ga dingwanga tse tharo fa go sena go kokoanngwa tshedimosetso. ",
+      "Ke dumela  gore babatlisisi ba bangwe ba ka dirisa tshedimosetso e ke e neelang mo tirong ya go kwala maikutlo a polelo, mme leina la me le tshedimosetso epe fela ya me ga e kitla e dirisiwa kgotsa e fetisiwa."
+    ]
+    all_checked = True
+    for item in consent_statements:
+      checked = st.checkbox(item)
+      if not checked:
+        all_checked = False
+    if st.button("Simolola go tshwaya", disabled= not all_checked):
+      st.session_state.page = "setswana_login_page"
+      st.rerun()
+
+
+def setswana_login_page(): 
+  """User inputs their user id or they create a new one. Get rid of whitespace and convert id to uppercase (Generate id function above and whats stored in DB is uppercase)
+  validate that the entered id exists in the database or it's a newly generated one. """
+  if st.session_state.page == "setswana_login_page":
+    st.title("Lefelo la go ikitsise")
+    user_id = st.text_input(label= "Letshwao la boitshupo", placeholder = "Ka kopo, tsenya nomoro ya gago ya boitshupo fano")
+    if st.button("Kopa letshwao la boitshupo"):
+        if "new_id" not in st.session_state:
+            st.session_state.new_id = generate_unique_id(supabase)
+    if "new_id" in st.session_state:
+      st.write(f"Letshwao la gago la palo ya boitshupo ke: {st.session_state.new_id}, Kopa o le boloke mo lefelong le e babalesegileng gore o kgone go le dirisa mo nakong e e tlang.")
+    if st.button("Tsena"):
+      entered_id = user_id.strip().upper()
+      new_id = st.session_state.get("new_id")
+      found_in_annotators = supabase.table("annotators").select("annotator_id").eq("annotator_id", entered_id).execute()
+      id_is_valid = len(found_in_annotators.data) > 0 or (new_id is not None and entered_id == new_id)
+      if entered_id and id_is_valid :
+        if "user_id" not in st.session_state:
+            st.session_state.user_id = entered_id
+        st.session_state.page ="setswana_labeling_sentences"
+        st.rerun()
+      else:
+        st.write("Letshwao la boitshupo ga le a nepagala, ka kopo kopa le lesha")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 def labeling(supabase):
     emotions = ["Select an emotion", "Joy", "Anger", "Sadness", "Fear", "Disgust", "Neutral", "Surprise"]
     #choosing sentences for the user to label (from the eligible sentences, choosing the number they selected)
@@ -165,8 +229,7 @@ def english_labeling_sentences(supabase):
              "Give some info about the meanings/definitions of emotions. Give some info about the meanings/definitions of emotions. Give some info about the meanings/definitions of emotions. Give some info about the meanings/definitions of emotions. Give some info about the meanings/definitions of emotions. Give some info about the meanings/definitions of emotions. Give some info about the meanings/definitions of emotions. Give some info about the meanings/definitions of emotions."\
              "Give some info about the meanings/definitions of emotions. Give some info about the meanings/definitions of emotions. Give some info about the meanings/definitions of emotions. Give some info about the meanings/definitions of emotions. Give some info about the meanings/definitions of emotions. Give some info about the meanings/definitions of emotions. Give some info about the meanings/definitions of emotions. Give some info about the meanings/definitions of emotions."\
              "Give some info about the meanings/definitions of emotions. Give some info about the meanings/definitions of emotions. Give some info about the meanings/definitions of emotions. Give some info about the meanings/definitions of emotions. Give some info about the meanings/definitions of emotions. Give some info about the meanings/definitions of emotions. Give some info about the meanings/definitions of emotions. Give some info about the meanings/definitions of emotions."\
-             "Give some info about the meanings/definitions of emotions. Give some info about the meanings/definitions of emotions. Give some info about the meanings/definitions of emotions. Give some info about the meanings/definitions of emotions. Give some info about the meanings/definitions of emotions. Give some info about the meanings/definitions of emotions. Give some info about the meanings/definitions of emotions. Give some info about the meanings/definitions of emotions."
-             
+             "Give some info about the meanings/definitions of emotions. Give some info about the meanings/definitions of emotions. Give some info about the meanings/definitions of emotions. Give some info about the meanings/definitions of emotions. Give some info about the meanings/definitions of emotions. Give some info about the meanings/definitions of emotions. Give some info about the meanings/definitions of emotions. Give some info about the meanings/definitions of emotions." 
             )  
     if st.session_state.scroll_to_top:
         scroll_to_here(0, key = "top")
@@ -211,6 +274,75 @@ def english_labeling_sentences(supabase):
 def english_end_page():
   if st.session_state.page == "english_end_page":
     st.success("Thank you for participating, please share the link to this labeling task with other Tswana people you know.")
+
+
+
+
+def setswana_labeling_sentences(supabase):
+  """Show the eligible sentences to the user. (showing number of sentences the user has chosen on previous page).
+  record user input. restrict user from choosing confidence if they havent chosen an emotion label. """
+
+
+  if st.session_state.page == "setswana_labeling_sentences":
+  
+    st.write("Give some info about the meanings/definitions of emotions. Give some info about the meanings/definitions of emotions. Give some info about the meanings/definitions of emotions. Give some info about the meanings/definitions of emotions. Give some info about the meanings/definitions of emotions. Give some info about the meanings/definitions of emotions. Give some info about the meanings/definitions of emotions. Give some info about the meanings/definitions of emotions." \
+            "Give some info about the meanings/definitions of emotions. Give some info about the meanings/definitions of emotions. Give some info about the meanings/definitions of emotions. Give some info about the meanings/definitions of emotions. Give some info about the meanings/definitions of emotions. Give some info about the meanings/definitions of emotions. Give some info about the meanings/definitions of emotions. Give some info about the meanings/definitions of emotions."\
+             "Give some info about the meanings/definitions of emotions. Give some info about the meanings/definitions of emotions. Give some info about the meanings/definitions of emotions. Give some info about the meanings/definitions of emotions. Give some info about the meanings/definitions of emotions. Give some info about the meanings/definitions of emotions. Give some info about the meanings/definitions of emotions. Give some info about the meanings/definitions of emotions."\
+             "Give some info about the meanings/definitions of emotions. Give some info about the meanings/definitions of emotions. Give some info about the meanings/definitions of emotions. Give some info about the meanings/definitions of emotions. Give some info about the meanings/definitions of emotions. Give some info about the meanings/definitions of emotions. Give some info about the meanings/definitions of emotions. Give some info about the meanings/definitions of emotions."\
+             "Give some info about the meanings/definitions of emotions. Give some info about the meanings/definitions of emotions. Give some info about the meanings/definitions of emotions. Give some info about the meanings/definitions of emotions. Give some info about the meanings/definitions of emotions. Give some info about the meanings/definitions of emotions. Give some info about the meanings/definitions of emotions. Give some info about the meanings/definitions of emotions."\
+             "Give some info about the meanings/definitions of emotions. Give some info about the meanings/definitions of emotions. Give some info about the meanings/definitions of emotions. Give some info about the meanings/definitions of emotions. Give some info about the meanings/definitions of emotions. Give some info about the meanings/definitions of emotions. Give some info about the meanings/definitions of emotions. Give some info about the meanings/definitions of emotions."\
+             "Give some info about the meanings/definitions of emotions. Give some info about the meanings/definitions of emotions. Give some info about the meanings/definitions of emotions. Give some info about the meanings/definitions of emotions. Give some info about the meanings/definitions of emotions. Give some info about the meanings/definitions of emotions. Give some info about the meanings/definitions of emotions. Give some info about the meanings/definitions of emotions."\
+             "Give some info about the meanings/definitions of emotions. Give some info about the meanings/definitions of emotions. Give some info about the meanings/definitions of emotions. Give some info about the meanings/definitions of emotions. Give some info about the meanings/definitions of emotions. Give some info about the meanings/definitions of emotions. Give some info about the meanings/definitions of emotions. Give some info about the meanings/definitions of emotions." 
+            )  
+    if st.session_state.scroll_to_top:
+        scroll_to_here(0, key = "top")
+        st.session_state.scroll_to_top = False   
+    st.divider()
+    st.markdown("""
+    <style>
+    .st-key-next_btn button {
+        background-color: #21ba45;   
+        color: white;
+        font-weight: bold;
+    }
+    .st-key-stop_btn button {
+        background-color: #db2828;   
+        color: white;
+        font-weight: bold;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+ 
+    labeling(supabase)
+      
+    col1, col2 = st.columns([50,50])
+      
+    with col1 :
+        if st.button("EMA", width = "stretch", icon = ":material/cancel:", icon_position = "right", key = "stop_btn"):
+            add_user_to_table(supabase, st.session_state.user_id)
+            record_annotation(supabase, st.session_state.user_responses)
+            st.session_state.page = "setswana_end_page"
+            st.rerun()
+    with col2:  
+        if st.button("E LATELANG", width = "stretch", icon = ":material/arrow_forward:", icon_position = "right", key = "next_btn"):
+            add_user_to_table(supabase, st.session_state.user_id)
+            record_annotation(supabase, st.session_state.user_responses)
+            st.session_state.pop("chosen_ids", None)
+            st.session_state.pop("user_responses", None)
+            st.session_state.scroll_to_top = True
+            st.rerun()
+        
+def setswana_end_page():
+  if st.session_state.page == "setswana_end_page":
+    st.success("Re lebogela go nna le karolo ga gago , kopa o abelane kgolagano ya tiro eno ya go tshwaya maikutlo le Batswana ba bangwe ba o ba itseng.")
+
+
+
+
+
+
+
+
 
 
 #first page the participant sees. This is where they choose which language they are comfortable participating in.
@@ -267,47 +399,6 @@ english_end_page()
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-# def setswana_information_consent():
-#   """Information page and consent statements shown to user in Setswana. The user cannot move to the next page/press the "Start Labeling" button if they have not given consent. """
-#   if st.session_state.page == "setswana_information_and_consent":   
-#     st.title("Evaluating Pseudo-labeling for Setswana Emotion Classification")
-#     st.subheader("Information about the study")
-#     st.write("give info...(detailed)")
-#     st.markdown("---")
-    
-#     st.subheader("Tumalano")
-#     consent_statements = [
-#      "Ke tlhaloseditswe ka patlisiso e. Ke tlhaloganya se thuto eno e leng ka sone.",
-#       "Ke a tlhaloganya gore go nna le seabe ga me ke boithaopo, nka kgona go tlogela dipolelo dipe fela tse ke sa batleng go di tshwaya, mme nka kgona go emisa nako nngwe le nngwe ntle le go otlhaiwa.",
-#       "Ke a netefatsa gore ke mmueledi wa Setswana wa dingwaga tse di fa gare ga 18 le 65. ",
-#       "Ke dumela gore go nna le seabe go tla nna go sa itsiwe, leina la me kgotsa tshedimosetso e nngwe e e supang gore ke mang ga e kitla e kokoanngwa e be e dirisiwa ke mmatlisisi mo pegong ya gagwe ya dipatlisiso.", 
-#       "Ke dumela gore matshwao a maikutlo le selekanyo sa tshepo tse ke di neelang di tsenngwe mo setlhopong sa tshedimosetso se se sa itsiweng gore ke mang, mme di gololwe mo setšhabeng morago ga thuto ya MSc ya mmatlisisi, mme e seng morago ga dingwanga tse tharo fa go sena go kokoanngwa tshedimosetso. ",
-#       "Ke dumela  gore babatlisisi ba bangwe ba ka dirisa tshedimosetso e ke e neelang mo tirong ya go kwala maikutlo a polelo, mme leina la me le tshedimosetso epe fela ya me ga e kitla e dirisiwa kgotsa e fetisiwa."
-#     ]
-#     all_checked = True
-#     for item in consent_statements:
-#       checked = st.checkbox(item)
-#       if not checked:
-#         all_checked = False
-#     if st.button("Simolola go tshwaya", disabled= not all_checked):
-#       st.session_state.page = "setswana_login_page"
-#       st.rerun()
-
-
-
-
-
 # def setswana_login_page(): 
 #   """User inputs their user id or they create a new one. Get rid of whitespace and convert id to uppercase (Generate id function above and whats stored in DB is uppercase)
 #   validate that the entered id exists in the database or it's a newly generated one. """
@@ -330,6 +421,15 @@ english_end_page()
 #         st.rerun()
 #       else:
 #         st.write("Letshwao la boitshupo ga le a nepagala, ka kopo kopa le lesha")
+
+
+
+
+
+
+
+
+
 
 
 

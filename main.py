@@ -46,7 +46,7 @@ def record_annotation(supabase,user_responses):
       supabase.table("labeled_sentences").update({f"label_{new_count}":response["emotion"], f"confidence_{new_count}":response["confidence"]}).eq("sentence_id", s_id).execute()
 
 def english_information_sheet():
-    if st.session_state.page == "english_information_sheet"
+    if st.session_state.page == "english_information_sheet":
         st.title("Evaluating Pseudo-labeling for Setswana Emotion Classification")
         st.subheader("Information about the study")
         st.pdf("english_information_sheet.pdf")

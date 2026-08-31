@@ -45,9 +45,22 @@ def record_annotation(supabase,user_responses):
     else:
       supabase.table("labeled_sentences").update({f"label_{new_count}":response["emotion"], f"confidence_{new_count}":response["confidence"]}).eq("sentence_id", s_id).execute()
 
+def english_information_sheet():
+    if st.session_state.page == "english_information_sheet"
+        st.title("Evaluating Pseudo-labeling for Setswana Emotion Classification")
+        st.subheader("Information about the study")
+        st.pdf("english_information_sheet.pdf")
+
+        with open("english_information_sheet.pdf", "rb") as f:
+            st.download_button("Download information sheet", f, file_name = "english_information_sheet.pdf", mime = "application/pdf")
+        if st.button("Continue"):
+            st.session_stage.page = "english_consent"
+            st.rerun()
+
+
 def english_information_consent():
   """Information page and consent statements shown to user in English. The user cannot move to the next page/press the "Start Labeling" button if they have not given consent. """
-  if st.session_state.page == "english_information_and_consent":   
+  if st.session_state.page == "english_consent":   
     st.title("Evaluating Pseudo-labeling for Setswana Emotion Classification")
     st.subheader("Information about the study")
     st.write("give info...(detailed)")
@@ -362,10 +375,10 @@ if st.session_state.page =="Welcome_page":
   st.write("Welcome to the Setswana Emotion labeling task, your contibution is highly appreciated. Please choose the language you are most comfortable with:" )
   st.write("O amogelesegile mo tirong ya go tshwaya maikutlo a Setswana, re lebogela go nna le seabe ga gago. Ka kopo, tlhopa loleme le o gololesegileng ka lone. " )
   if st.button("English"):
-    st.session_state.page = "english_information_and_consent"
+    st.session_state.page = "english_information_sheet"
     st.rerun()
   if st.button("Setswana"):
-    st.session_state.page = "setswana_information_and_consent"
+    st.session_state.page = "setswana_information_sheet"
     st.rerun()
 english_information_consent()
 setswana_information_consent()

@@ -54,7 +54,7 @@ def english_information_sheet():
         with open("english_information_sheet.pdf", "rb") as f:
             st.download_button("Download information sheet", f, file_name = "english_information_sheet.pdf", mime = "application/pdf")
         if st.button("Continue"):
-            st.session_stage.page = "english_consent"
+            st.session_state.page = "english_consent"
             st.rerun()
 
 

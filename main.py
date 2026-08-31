@@ -177,6 +177,7 @@ def setswana_login_page():
 
 def labeling(supabase):
     emotions = ["Select an emotion", "Joy", "Anger", "Sadness", "Fear", "Disgust", "Neutral", "Surprise"]
+    text_confirmation = ["Select", "Yes", "No"]
     #choosing sentences for the user to label (from the eligible sentences, choosing the number they selected)
     if "chosen_ids" not in st.session_state:
       eligible_sentence_ids = get_eligible_sentence_ids(supabase, st.session_state.user_id)
@@ -191,7 +192,7 @@ def labeling(supabase):
         s_id = row["sentence_id"]
         s_text = row["sentence"]
 
-        col_sentence, col_emotion, col_confidence = st.columns([60,20,20])
+        col_sentence, col_emotion, col_confidence, col_confirmation = st.columns([50,20,15,15])
 
         with col_sentence:
           st.write(f"{idx}. {s_text}")
@@ -200,6 +201,8 @@ def labeling(supabase):
           emotion_chosen = chosen_emotion != emotions[0]
         with col_confidence:
           chosen_confidence = st.number_input("Confidence:",min_value = 0, max_value = 100, value = 0, step = 10,key = f"Confidence_for_{s_id}" ,disabled = not emotion_chosen)
+        with col_confirmation : 
+            setswana_confirmation = st.selectbox("Is this Setswana?", options = text_confirmation, key = f"confirmation_for_{s_id}")
         if emotion_chosen:
           st.session_state.user_responses.setdefault(s_id, {})
           st.session_state.user_responses[s_id]["emotion"] = chosen_emotion
@@ -208,6 +211,11 @@ def labeling(supabase):
           else:
             st.warning(f"Please set a confidence score for sentence {idx}. If you don't, it will be assumed to be 0.")
             st.session_state.user_responses[s_id]["confidence"] = 0
+          if setswana_confirmation != "Select"
+            st.session_state.user_responses[s_id]["confirmation"] = setswana_confirmation
+          else:
+            st.warning(f"Please confirm whether this is a Setswana text or not")  
+            
         else:
           st.session_state.user_responses.pop(s_id, None)
         st.divider()

@@ -58,7 +58,7 @@ def english_information_sheet():
             st.rerun()
 
 
-def english_information_consent():
+def english_consent():
   """Information page and consent statements shown to user in English. The user cannot move to the next page/press the "Start Labeling" button if they have not given consent. """
   if st.session_state.page == "english_consent":   
     st.title("Evaluating Pseudo-labeling for Setswana Emotion Classification")
@@ -124,7 +124,7 @@ def get_eligible_sentence_ids(supabase, user_id):
 
 
 
-def setswana_information_consent():
+def setswana_consent():
   """Information page and consent statements shown to user in Setswana. The user cannot move to the next page/press the "Start Labeling" button if they have not given consent. """
   if st.session_state.page == "setswana_information_and_consent":   
     st.title("Evaluating Pseudo-labeling for Setswana Emotion Classification")
@@ -380,8 +380,10 @@ if st.session_state.page =="Welcome_page":
   if st.button("Setswana"):
     st.session_state.page = "setswana_information_sheet"
     st.rerun()
-english_information_consent()
-setswana_information_consent()
+english_information_sheet()
+setswana_information_sheet()
+english_consent()
+setswana_consent()
 english_login_page()
 setswana_login_page()
 english_labeling_sentences(supabase)

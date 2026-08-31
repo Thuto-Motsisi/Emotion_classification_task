@@ -62,8 +62,6 @@ def english_consent():
   """Information page and consent statements shown to user in English. The user cannot move to the next page/press the "Start Labeling" button if they have not given consent. """
   if st.session_state.page == "english_consent":   
     st.title("Evaluating Pseudo-labeling for Setswana Emotion Classification")
-    st.subheader("Information about the study")
-    st.write("give info...(detailed)")
     st.markdown("---")
     
     st.subheader("Consent")
@@ -74,7 +72,9 @@ def english_consent():
       "I agree that my participation will remain anonymous, my name or other identifying data will not be collected and used by the researcher in their research report.",
       "I agree to the emotion labels and confidence scores I provide to be included in an anonymized dataset and to be released publicly after completion of the researchers MSc study, and no later than 3 years after the data is collected. ",
       "I agree that other researchers may use the information I provide in the sentence emotion labeling activity, but my name and any personal information will not be used or passed on."
+      "I understand that my participation is voluntary and I will not receive any remuneration or other direct benefit for participating in this study."
     ]
+      
     all_checked = True
     for item in consent_statements:
       checked = st.checkbox(item)

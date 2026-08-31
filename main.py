@@ -192,7 +192,7 @@ def labeling(supabase):
         s_id = row["sentence_id"]
         s_text = row["sentence"]
 
-        col_sentence, col_emotion, col_confidence, col_confirmation = st.columns([50,20,15,15])
+        col_sentence, col_emotion, col_confidence, col_confirmation = st.columns([55,15,15,15])
 
         with col_sentence:
           st.write(f"{idx}. {s_text}")

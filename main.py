@@ -192,7 +192,7 @@ def labeling(supabase):
         s_id = row["sentence_id"]
         s_text = row["sentence"]
 
-        col_sentence, col_emotion, col_confidence, col_confirmation = st.columns([55,15,15,15])
+        col_sentence, col_emotion, col_confidence, col_confirmation = st.columns([70,10,10,10])
 
         with col_sentence:
           st.write(f"{idx}. {s_text}")
@@ -202,7 +202,7 @@ def labeling(supabase):
         with col_confidence:
           chosen_confidence = st.number_input("Confidence:",min_value = 0, max_value = 100, value = 0, step = 10,key = f"Confidence_for_{s_id}" ,disabled = not emotion_chosen)
         with col_confirmation : 
-            setswana_confirmation = st.selectbox("Is this Setswana?", options = text_confirmation, key = f"confirmation_for_{s_id}", disabled = not emotion_chosen)
+            setswana_confirmation = st.selectbox("Setswana?", options = text_confirmation, key = f"confirmation_for_{s_id}", disabled = not emotion_chosen)
         if emotion_chosen:
           st.session_state.user_responses.setdefault(s_id, {})
           st.session_state.user_responses[s_id]["emotion"] = chosen_emotion

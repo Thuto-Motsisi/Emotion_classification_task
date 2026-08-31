@@ -211,7 +211,7 @@ def labeling(supabase):
           else:
             st.warning(f"Please set a confidence score for sentence {idx}. If you don't, it will be assumed to be 0.")
             st.session_state.user_responses[s_id]["confidence"] = 0
-          if setswana_confirmation != "Select"
+          if setswana_confirmation != "Select":
             st.session_state.user_responses[s_id]["confirmation"] = setswana_confirmation
           else:
             st.warning(f"Please confirm whether this is a Setswana text or not")  

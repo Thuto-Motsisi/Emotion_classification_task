@@ -381,7 +381,7 @@ if st.session_state.page =="Welcome_page":
     st.session_state.page = "setswana_information_sheet"
     st.rerun()
 english_information_sheet()
-setswana_information_sheet()
+# setswana_information_sheet()
 english_consent()
 setswana_consent()
 english_login_page()
